@@ -3,39 +3,36 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
-import { UserEntity } from 'src/users/entities/user.entity';
-import { Repository } from 'typeorm';
 import { RegisterDto } from './dtos/register.dto';
-import { defaultProfileImage } from 'src/common/constants';
 import * as bcrypt from 'bcryptjs';
 import { LoginDto } from './dtos/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
-import { JwtPayloadType } from 'src/common/types';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { VerificationCodeDto } from './dtos/verification-code.dto';
 import { VerificationAccountDto } from './dtos/verification-account.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
-import { PostService } from 'src/post/post.service';
+import { Model } from 'mongoose';
+import { User } from 'src/users/entities/user.chema';
+import { InjectModel } from '@nestjs/mongoose';
+import { defaultProfileImage } from 'src/shared/constants';
+import { JwtPayloadType } from 'src/shared/types';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(UserEntity)
-    private readonly userRepositry: Repository<UserEntity>,
+    @InjectModel(User.name) private readonly userModel: Model<User>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly mailerService: MailerService,
-    private readonly postService: PostService,
   ) {}
 
   public async register(registerDto: RegisterDto, file: Express.Multer.File) {
-    const existUser = await this.userRepositry.findOneBy({
+    const existUser = await this.userModel.findOne({
       email: registerDto.email,
     });
     if (existUser) {
@@ -56,17 +53,17 @@ export class AuthService {
 
     registerDto.password = await bcrypt.hash(registerDto.password, 10);
     // Create the user and store the profileImage data
-    const user = this.userRepositry.create({
+    const user = this.userModel.create({
       ...registerDto,
       profileImage, // Save the profileImage (either from Cloudinary or the default)
     });
 
     // Save the user to the database
-    return await this.userRepositry.save(user);
+    return user;
   }
 
   public async login(loginDto: LoginDto, res: Response) {
-    const user = await this.userRepositry.findOneBy({ email: loginDto.email });
+    const user = await this.userModel.findOne({ email: loginDto.email });
     if (!user) {
       throw new NotFoundException('Invalid email or password');
     }
@@ -78,7 +75,7 @@ export class AuthService {
       throw new NotFoundException('Invalid email or password');
     }
     const payLoad: JwtPayloadType = {
-      id: user.id,
+      id: user._id.toString(),
       email: user.email,
       role: user.role,
       isAccountVerified: user.isAccountVerified,
@@ -97,7 +94,7 @@ export class AuthService {
     return { user, token };
   }
   public async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    const user = await this.userRepositry.findOneBy({
+    const user = await this.userModel.findOne({
       email: resetPasswordDto.email,
     });
     if (!user) {
@@ -120,7 +117,7 @@ export class AuthService {
     });
 
     user.verificationCode = code;
-    await this.userRepositry.save(user);
+    await user.save();
 
     return { message: 'reset code has been sent to your email' };
   }
@@ -128,11 +125,9 @@ export class AuthService {
   public async validateVerificationCode(
     verificationCodeDto: VerificationCodeDto,
   ) {
-    const user = await this.userRepositry.findOne({
-      where: {
-        email: verificationCodeDto.email,
-        verificationCode: verificationCodeDto.verificationCode,
-      },
+    const user = await this.userModel.findOne({
+      email: verificationCodeDto.email,
+      verificationCode: verificationCodeDto.verificationCode,
     });
 
     if (!user) {
@@ -142,12 +137,12 @@ export class AuthService {
     const password = await bcrypt.hash(verificationCodeDto.newPassword, 10);
     user.verificationCode = null;
     user.password = password;
-    await this.userRepositry.save(user);
+    await user.save();
     return { user };
   }
 
   public async sendVerificationCode(user: JwtPayloadType) {
-    const exisUser = await this.userRepositry.findOneBy({ email: user.email });
+    const exisUser = await this.userModel.findOne({ email: user.email });
     const code = Math.floor(Math.random() * 1000000).toString();
     const htmlMessage = `
     <div>
@@ -157,14 +152,16 @@ export class AuthService {
      </div>`;
 
     this.mailerService.sendMail({
-      from: `Zefzafy-Blog <${this.config.get<string>('EMAIL_USERNAME')}>`,
+      from: `Zef-Academy <${this.config.get<string>('EMAIL_USERNAME')}>`,
       to: user.email,
       subject: 'Verify Account',
       html: htmlMessage,
     });
 
-    exisUser.verificationCode = code;
-    await this.userRepositry.save(exisUser);
+    if (exisUser) {
+      exisUser.verificationCode = code;
+      await exisUser.save();
+    }
     return { message: 'Verification Code sent to your email' };
   }
 
@@ -173,11 +170,9 @@ export class AuthService {
     user: JwtPayloadType,
     res: Response,
   ) {
-    const exisUser = await this.userRepositry.findOne({
-      where: {
-        email: verificationAccountDto.email,
-        verificationCode: verificationAccountDto.verificationCode,
-      },
+    const exisUser = await this.userModel.findOne({
+      email: verificationAccountDto.email,
+      verificationCode: verificationAccountDto.verificationCode,
     });
 
     if (!exisUser) {
@@ -187,7 +182,7 @@ export class AuthService {
     exisUser.isAccountVerified = true;
     user.isAccountVerified = true;
     exisUser.verificationCode = null;
-    await this.userRepositry.save(exisUser);
+    await exisUser.save();
 
     const payLoad: JwtPayloadType = {
       id: user.id,
@@ -209,9 +204,7 @@ export class AuthService {
   }
 
   public async getCurrentUser(user: JwtPayloadType) {
-    const currentUser = await this.userRepositry.findOne({
-      where: { id: user.id },
-    });
+    const currentUser = await this.userModel.findOne({ _id: user.id });
     if (!currentUser) {
       throw new NotFoundException('User not found');
     }
@@ -223,7 +216,7 @@ export class AuthService {
     user: JwtPayloadType,
     file: Express.Multer.File,
   ) {
-    const currentUser = await this.userRepositry.findOneBy({ id: user.id });
+    const currentUser = await this.userModel.findById(user.id);
     if (!currentUser) throw new NotFoundException('user not found');
     updateUserDto.email = user.email;
     if (updateUserDto.password) {
@@ -243,12 +236,12 @@ export class AuthService {
         public_id: result.public_id,
       };
     }
-    await this.userRepositry.save(currentUser);
+    await currentUser.save();
     return currentUser;
   }
 
-  public async remove(id: number) {
-    const user = await this.userRepositry.findOneBy({ id });
+  public async remove(id: string) {
+    const user = await this.userModel.findById(id);
     if (!user) {
       throw new NotFoundException(`User with id (${id}) not found`);
     }
@@ -257,23 +250,7 @@ export class AuthService {
       await this.cloudinaryService.removeImage(user.profileImage.public_id);
     }
 
-    const posts = await this.postService.findUserPosts(id);
-    console.log('posts---', posts);
-
-    let publicIds = [];
-    if (posts.length > 0) {
-      posts.map((post) => {
-        if (post.image) {
-          publicIds.push(post.image.public_id);
-        }
-      });
-      console.log(publicIds);
-    }
-
-    if (publicIds.length > 0) {
-      await this.cloudinaryService.removeMultipleImages(publicIds);
-    }
-    await this.userRepositry.remove(user);
+    await this.userModel.findByIdAndDelete(user.id);
     return { message: `User with id (${id}) was removed` };
   }
 

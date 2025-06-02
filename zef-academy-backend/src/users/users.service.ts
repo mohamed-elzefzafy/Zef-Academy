@@ -6,92 +6,108 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UpdateUserDto } from '../auth/dtos/update-user.dto';
-import { Repository } from 'typeorm';
-import { UserEntity } from './entities/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 import { RegisterDto } from '../auth/dtos/register.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
-import { PostService } from 'src/post/post.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from './entities/user.chema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(UserEntity)
-    private readonly userRepositry: Repository<UserEntity>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<User>,
     private readonly cloudinaryService: CloudinaryService,
-    @Inject(forwardRef(() => PostService))
-    private readonly postService: PostService,
   ) {}
 
   // public async findAll() {
   //   return this.userRepositry.find();
   // }
 
+  // public async findAll(page: number, limit: number) {
+  //   // Ensure page and limit are positive
+  //   const pageNumber = Math.max(1, page);
+  //   const limitNumber = Math.max(1, limit);
+
+  //   // Calculate skip (offset) for pagination
+  //   const skip = (pageNumber - 1) * limitNumber;
+
+  //   // Fetch paginated users and total count
+  //   const [users, total] = await this.userRepositry.findAndCount({
+  //     skip,
+  //     take: limitNumber,
+  //     order :{role : "ASC" , createdAt : "ASC"},
+  //   });
+
+  //   // Calculate total pages
+  //   const pagesCount = Math.ceil(total / limitNumber);
+
+  //   // Return response in desired format
+  //   return {
+  //     users,
+  //     pagination: {
+  //       total,
+  //       page: pageNumber,
+  //       limit: limitNumber,
+  //       pagesCount,
+  //     },
+  //   };
+  // }
+
   public async findAll(page: number, limit: number) {
-    // Ensure page and limit are positive
-    const pageNumber = Math.max(1, page);
-    const limitNumber = Math.max(1, limit);
+  // Ensure page and limit are positive integers
+  const pageNumber = Math.max(1, page);
+  const limitNumber = Math.max(1, limit);
 
-    // Calculate skip (offset) for pagination
-    const skip = (pageNumber - 1) * limitNumber;
+  // Calculate skip (offset) for pagination
+  const skip = (pageNumber - 1) * limitNumber;
 
-    // Fetch paginated users and total count
-    const [users, total] = await this.userRepositry.findAndCount({
-      skip,
-      take: limitNumber,
-      order :{role : "ASC" , createdAt : "ASC"},
-    });
+  // Fetch users and total count using Mongoose
+  const users = await this.userModel
+      .find()
+      .sort({ role: 1, createdAt: 1 }) // ASC sorting
+      .skip(skip)
+      .limit(limitNumber)
+      .exec();
 
-    // Calculate total pages
-    const pagesCount = Math.ceil(total / limitNumber);
+  const total = await this.userModel.countDocuments().exec();
 
-    // Return response in desired format
-    return {
-      users,
-      pagination: {
-        total,
-        page: pageNumber,
-        limit: limitNumber,
-        pagesCount,
-      },
-    };
-  }
 
-  public async findOne(id: number) {
-    const user = await this.userRepositry.findOneBy({ id });
+  // Calculate total pages
+  const pagesCount = Math.ceil(total / limitNumber);
+
+  // Return paginated result
+  return {
+    users,
+    pagination: {
+      total,
+      page: pageNumber,
+      limit: limitNumber,
+      pagesCount,
+    },
+  };
+}
+
+
+  public async findOne(id: string) {
+    const user = await this.userModel.findById( id );
     if (!user) {
       throw new NotFoundException(`User with id (${id}) not found`);
     }
     return user;
   }
 
-  public async remove(id: number) {
+  public async remove(id: string) {
     const user = await this.findOne(id);
     if (user.profileImage.public_id !== null) {
       await this.cloudinaryService.removeImage(user.profileImage.public_id);
     }
 
-    const posts = await this.postService.findUserPosts(id);
-    console.log('posts---', posts);
 
-    let publicIds = [];
-if (posts.length > 0) {
-      posts.map((post) => {
-      if (post.image) {
-        publicIds.push(post.image.public_id);
-      }
-    });
-    console.log(publicIds);
-}
-
-  if (publicIds.length > 0) {
-      await this.cloudinaryService.removeMultipleImages(publicIds);
-  }
-    await this.userRepositry.remove(user);
     return { message: `User with id (${id}) was removed` };
   }
 
   async getUsersCount() {
-    return this.userRepositry.count();
+    return this.userModel.countDocuments().exec();
   }
 }

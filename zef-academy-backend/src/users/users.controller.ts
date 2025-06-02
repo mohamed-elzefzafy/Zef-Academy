@@ -16,6 +16,9 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from '../auth/dtos/update-user.dto';
 import { Roles } from 'src/auth/decorator/Roles.decorator';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { UserRoles } from 'src/shared/enums/roles.enum';
+import { PAGE_LIMIT_ADMIN } from 'src/shared/constants';
+import { ParseObjectIdPipe } from '@nestjs/mongoose';
 
 
 @Controller('users')
@@ -33,7 +36,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseObjectIdPipe) id: string) {
     return this.usersService.findOne(id);
   }
 
@@ -41,7 +44,7 @@ export class UsersController {
   @Delete(':id')
     @Roles([UserRoles.ADMIN])
   @UseGuards(AuthGuard)
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseObjectIdPipe) id: string) {
     return this.usersService.remove(id);
   }
 

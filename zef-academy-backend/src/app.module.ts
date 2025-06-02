@@ -9,11 +9,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MulterModule } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
     TestModule,
-        ConfigModule.forRoot({
+    ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
@@ -36,16 +39,26 @@ import { MailerModule } from '@nestjs-modules/mailer';
       },
     }),
     MongooseModule.forRootAsync({
-      inject :[ConfigService],
+      inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         uri: config.get<string>('DATABASE_URL'),
-        dbName : 'Zef-Academy'
+        dbName: 'Zef-Academy',
       }),
     }),
+        JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return {
+          global: true,
+          secret: config.get<string>('JWT_SECRET_KEY'),
+          signOptions: { expiresIn: config.get<string>('JWT_EXPIRE_IN') },
+        };
+      },
+    }),
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
-
-

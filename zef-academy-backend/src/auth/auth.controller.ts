@@ -21,13 +21,13 @@ import { LoginDto } from './dtos/login.dto';
 import { Response } from 'express';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { VerificationCodeDto } from './dtos/verification-code.dto';
-import { JwtPayloadType } from 'src/common/types';
 import { CurrentUser } from './decorator/current-user.decorator';
 import { Roles } from './decorator/Roles.decorator';
-import { UserRoles } from 'src/common/enums/roles.enum';
 import { AuthGuard } from './guards/auth.guard';
 import { VerificationAccountDto } from './dtos/verification-account.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { UserRoles } from 'src/shared/enums/roles.enum';
+import { JwtPayloadType } from 'src/shared/types';
 
 @Controller('auth')
 export class AuthController {
@@ -87,12 +87,11 @@ export class AuthController {
   @Patch()
   @Roles([UserRoles.USER, UserRoles.ADMIN])
   @UseGuards(AuthGuard)
-  @Post('register')
   @UseInterceptors(FileInterceptor('profileImage'))
   public async updateCurrentUser(
     @Body() updateUserDto: UpdateUserDto,
     @CurrentUser() user: JwtPayloadType,
-    @UploadedFile('') file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     return this.authService.updateCurrentUser(updateUserDto, user, file);
   }
