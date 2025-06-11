@@ -29,7 +29,7 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { UserRoles } from 'src/shared/enums/roles.enum';
 import { JwtPayloadType } from 'src/shared/types';
 
-@Controller('auth')
+@Controller('v1/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

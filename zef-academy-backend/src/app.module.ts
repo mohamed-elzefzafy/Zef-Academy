@@ -12,6 +12,9 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
+import { CategoryModule } from './category/category.module';
+import { CourseModule } from './course/course.module';
+import { LectureModule } from './lecture/lecture.module';
 
 @Module({
   imports: [
@@ -57,6 +60,9 @@ import { JwtModule } from '@nestjs/jwt';
     }),
     UsersModule,
     AuthModule,
+    CategoryModule,
+    CourseModule,
+    LectureModule,
   ],
   controllers: [AppController],
   providers: [AppService],

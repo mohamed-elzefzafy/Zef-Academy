@@ -106,11 +106,11 @@ export class AuthService {
     <div>
        <h1>Forgot your password? If you didn't forget your password, please ignore this email!</h1>
        <p>Use the following code to verify your account: <h3 style="color: red; font-weight: bold; text-align: center">${code}</h3></p>
-       <h3 style="font-weight: bold">Zefzafy-Blog</h3>
+       <h3 style="font-weight: bold">Zef-Academy</h3>
      </div>`;
 
     this.mailerService.sendMail({
-      from: `Zefzafy-Blog <${this.config.get<string>('EMAIL_USERNAME')}>`,
+      from: `Zef-Academy <${this.config.get<string>('EMAIL_USERNAME')}>`,
       to: resetPasswordDto.email,
       subject: 'Reset Password',
       html: htmlMessage,
@@ -148,7 +148,7 @@ export class AuthService {
     <div>
        <h1>verify your account</h1>
        <p>Use the following code to verify your account: <h3 style="color: red; font-weight: bold; text-align: center">${code}</h3></p>
-       <h3 style="font-weight: bold">Zefzafy-Blog</h3>
+       <h3 style="font-weight: bold">Zef-Academy</h3>
      </div>`;
 
     this.mailerService.sendMail({

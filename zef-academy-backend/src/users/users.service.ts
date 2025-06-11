@@ -103,7 +103,7 @@ export class UsersService {
       await this.cloudinaryService.removeImage(user.profileImage.public_id);
     }
 
-
+await user.deleteOne();
     return { message: `User with id (${id}) was removed` };
   }
 
