@@ -21,6 +21,8 @@ import { UserRoles } from 'src/shared/enums/roles.enum';
 import { PAGE_LIMIT_ADMIN } from 'src/shared/constants';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { CurrentUser } from 'src/auth/decorator/current-user.decorator';
+import { JwtPayloadType } from 'src/shared/types';
 
 @Controller('v1/category')
 export class CategoryController {
@@ -30,8 +32,11 @@ export class CategoryController {
   @Roles([UserRoles.ADMIN])
   @UseGuards(AuthGuard)
   @UseInterceptors(FileInterceptor('image'))
-  create(@Body() createCategoryDto: CreateCategoryDto , @UploadedFile() file: Express.Multer.File) {
-    return this.categoryService.create(createCategoryDto , file);
+  create(
+    @Body() createCategoryDto: CreateCategoryDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.categoryService.create(createCategoryDto, file);
   }
 
   @Get()
@@ -56,14 +61,17 @@ export class CategoryController {
     @Body() updateCategoryDto: UpdateCategoryDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.categoryService.update(id, updateCategoryDto , file);
+    return this.categoryService.update(id, updateCategoryDto, file);
   }
 
   @Delete(':id')
   @Roles([UserRoles.ADMIN])
   @UseGuards(AuthGuard)
-  remove(@Param('id', ParseObjectIdPipe) id: string) {
-    return this.categoryService.remove(id);
+  remove(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @CurrentUser() user: JwtPayloadType,
+  ) {
+    return this.categoryService.remove(id ,user);
   }
 
   // @Get('getCategoriesCount')

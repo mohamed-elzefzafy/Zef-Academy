@@ -22,64 +22,124 @@ import { UserRoles } from 'src/shared/enums/roles.enum';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { multerOptions } from 'src/shared/multer.config';
+import { CurrentUser } from 'src/auth/decorator/current-user.decorator';
+import { JwtPayloadType } from 'src/shared/types';
+import { ToggleLectureToFreeOrNotDto } from './dto/toggleLectureToFreeOrNot.dto';
+import { UpdateLecturePositionDto } from './dto/update-lecture-position.dto';
 
 @Controller('v1/lecture')
 export class LectureController {
   constructor(private readonly lectureService: LectureService) {}
 
   @Post()
-  @Roles([UserRoles.ADMIN])
   @UseInterceptors(FileInterceptor('videoUrl'))
+  @Roles([UserRoles.ADMIN, UserRoles.INSTRUCTOR])
+  @UseGuards(AuthGuard)
   create(
     @Body() createLectureDto: CreateLectureDto,
     @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: JwtPayloadType,
   ) {
-    return this.lectureService.create(createLectureDto, file);
+    return this.lectureService.create(createLectureDto, file, user);
   }
-
-  @Get()
+  @Get('lectures-course/:id')
+  @Roles([UserRoles.ADMIN, UserRoles.INSTRUCTOR, UserRoles.USER])
   @UseGuards(AuthGuard)
-  findAll(
+  findAllCourseLectures(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = `${PAGE_LIMIT_ADMIN}`,
+    @Param('id', ParseObjectIdPipe) courseId: string,
+    @CurrentUser() user: JwtPayloadType,
   ) {
-    return this.lectureService.findAll(+page, +limit);
+    return this.lectureService.findAllCourseLectures(
+      +page,
+      +limit,
+      courseId,
+      user,
+    );
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseObjectIdPipe) id: string) {
-    return this.lectureService.findOne(id);
+  @Roles([UserRoles.ADMIN, UserRoles.INSTRUCTOR, UserRoles.USER])
+  @UseGuards(AuthGuard)
+  findOne(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @CurrentUser() user: JwtPayloadType,
+  ) {
+    return this.lectureService.findOne(id, user);
   }
 
-  @Patch(':id')
+  @Patch('update-lectureToFree/:id')
+  @Roles([UserRoles.ADMIN, UserRoles.INSTRUCTOR])
+  @UseGuards(AuthGuard)
+  toggleLectureToFreeOrNot(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @Body() toggleLectureToFreeOrNotDto : ToggleLectureToFreeOrNotDto,
+    @CurrentUser() user: JwtPayloadType,
+  ) {
+    return this.lectureService.toggleLectureToFreeOrNot(id, toggleLectureToFreeOrNotDto, user);
+  }
+
+
+  @Patch('update-position/:id')
+@Roles([UserRoles.ADMIN, UserRoles.INSTRUCTOR])
+@UseGuards(AuthGuard)
+updateLecturePosition(
+  @Param('id') id: string,
+  @Body() UpdateLecturePositionDto: UpdateLecturePositionDto,
+  @CurrentUser() user: JwtPayloadType,
+) {
+  return this.lectureService.updateLecturePosition(id, UpdateLecturePositionDto.position , user);
+}
+
+    @Patch(':id')
+  @Roles([UserRoles.ADMIN, UserRoles.INSTRUCTOR])
+  @UseGuards(AuthGuard)
   @UseInterceptors(FileInterceptor('videoUrl'))
   update(
     @Param('id', ParseObjectIdPipe) id: string,
     @Body() updateLectureDto: UpdateLectureDto,
     @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: JwtPayloadType,
   ) {
-    return this.lectureService.update(id, updateLectureDto, file);
+    return this.lectureService.update(id, updateLectureDto, file, user);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseObjectIdPipe) id: string) {
-    return this.lectureService.remove(id);
+  @Roles([UserRoles.ADMIN, UserRoles.INSTRUCTOR])
+  @UseGuards(AuthGuard)
+  remove(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @CurrentUser() user: JwtPayloadType,
+  ) {
+    return this.lectureService.remove(id, user);
   }
 
   @Patch('attachments/:id')
+  @Roles([UserRoles.ADMIN, UserRoles.INSTRUCTOR, UserRoles.USER])
+  @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('attachments', 5, multerOptions))
   addAttachments(
     @Param('id', ParseObjectIdPipe) id: string,
     @UploadedFiles() files: Express.Multer.File[],
+    @CurrentUser() user: JwtPayloadType,
   ) {
-    return this.lectureService.addAttachments(id, files);
+    return this.lectureService.addAttachments(id, files, user);
   }
 
   @Delete('attachments/:id')
+  @Roles([UserRoles.ADMIN, UserRoles.INSTRUCTOR, UserRoles.USER])
+  @UseGuards(AuthGuard)
   removeAttachment(
     @Param('id', ParseObjectIdPipe) id: string,
     @Query('publicId') publicId: string,
+    @CurrentUser() user: JwtPayloadType,
   ) {
-    return this.lectureService.removeAttachment(id , publicId);
+    return this.lectureService.removeAttachment(id, publicId, user);
+  }
+
+  @Delete('test-test/:id')
+  deleteLecturesForCourse(@Param('id', ParseObjectIdPipe) courseId: string) {
+    return this.lectureService.deleteLecturesForCourse(courseId);
   }
 }

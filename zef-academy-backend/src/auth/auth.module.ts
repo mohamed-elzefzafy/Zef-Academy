@@ -14,7 +14,6 @@ import { User, UserSchema } from 'src/users/entities/user.chema';
     CloudinaryModule,
     JwtModule,
     MongooseModule.forFeature([{name : User.name,schema :UserSchema}]),
-
   ],
 })
 export class AuthModule {}

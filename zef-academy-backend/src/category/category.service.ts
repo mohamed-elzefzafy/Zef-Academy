@@ -11,6 +11,8 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Category } from './entities/category.chema';
 import { Model } from 'mongoose';
+import { CourseService } from 'src/course/course.service';
+import { JwtPayloadType } from 'src/shared/types';
 
 @Injectable()
 export class CategoryService {
@@ -18,6 +20,8 @@ export class CategoryService {
     @InjectModel(Category.name)
     private readonly categoryModel: Model<Category>,
     private readonly cloudinaryService: CloudinaryService,
+    @Inject(forwardRef(()=>CourseService))
+    private readonly courseService: CourseService,
   ) {}
   public async create(
     createCategoryDto: CreateCategoryDto,
@@ -113,10 +117,11 @@ let image = {};
     return category;
   }
 
-  public async remove(id: string) {
+  public async remove(id: string,user: JwtPayloadType) {
     const category = await this.findOne(id);
     if (!category) throw new NotFoundException('category not found');
 
+    const courses = await this.courseService.getCoursesForSpecificCategory(id);
     // const posts = await this.postService.findCtegoryPosts(id);
 
     // let publicIds = [];
@@ -130,6 +135,10 @@ let image = {};
     // if (publicIds.length > 0) {
     //   await this.cloudinaryService.removeMultipleImages(publicIds);
     // }
+
+    for (let i = 0; i < courses.length; i++) {
+    await this.courseService.remove(courses[i]._id.toString(),user);  
+    }
     if (category.image) {
         await this.cloudinaryService.removeImage(
           category.image.public_id,

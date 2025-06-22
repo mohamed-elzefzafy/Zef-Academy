@@ -78,7 +78,7 @@ export class AuthController {
   }
 
   @Get('current-user')
-  @Roles([UserRoles.ADMIN, UserRoles.USER])
+  @Roles([UserRoles.ADMIN, UserRoles.USER, UserRoles.INSTRUCTOR])
   @UseGuards(AuthGuard)
   public async getCurrentUser(@CurrentUser() user: JwtPayloadType) {
     return this.authService.getCurrentUser(user);

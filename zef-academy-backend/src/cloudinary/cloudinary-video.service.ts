@@ -17,12 +17,20 @@ export class CloudinaryVideoService {
       return new Promise<any>((resolve, reject) => {
         // Set up the upload stream with Cloudinary options for video
         const uploadStream = cloudinaryV2.uploader.upload_stream(
-          { resource_type: 'video', folder: `Zef-Academy/${folder}` },
+          {
+            resource_type: 'video',
+            // type: 'authenticated',
+            // sign_url: true,
+            // secure: true,
+            folder: `Zef-Academy/${folder}`,
+          },
           (error, result) => {
             if (error) {
               console.error('Error uploading video to Cloudinary:', error);
               reject(
-                new InternalServerErrorException('Cloudinary video upload failed'),
+                new InternalServerErrorException(
+                  'Cloudinary video upload failed',
+                ),
               );
             }
             resolve(result);
@@ -33,7 +41,10 @@ export class CloudinaryVideoService {
         uploadStream.end(file.buffer);
       });
     } catch (error) {
-      console.error('Internal server error during Cloudinary video upload:', error);
+      console.error(
+        'Internal server error during Cloudinary video upload:',
+        error,
+      );
       throw new InternalServerErrorException(
         'Internal server error during Cloudinary video upload',
       );
@@ -51,7 +62,9 @@ export class CloudinaryVideoService {
             if (error) {
               console.error('Error removing video from Cloudinary:', error);
               reject(
-                new InternalServerErrorException('Cloudinary video removal failed'),
+                new InternalServerErrorException(
+                  'Cloudinary video removal failed',
+                ),
               );
             } else {
               resolve(result);
@@ -60,7 +73,10 @@ export class CloudinaryVideoService {
         );
       });
     } catch (error) {
-      console.error('Internal server error during Cloudinary video removal:', error);
+      console.error(
+        'Internal server error during Cloudinary video removal:',
+        error,
+      );
       throw new InternalServerErrorException(
         'Internal server error during Cloudinary video removal',
       );

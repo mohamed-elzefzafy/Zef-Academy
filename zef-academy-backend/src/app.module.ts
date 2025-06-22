@@ -15,6 +15,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { CategoryModule } from './category/category.module';
 import { CourseModule } from './course/course.module';
 import { LectureModule } from './lecture/lecture.module';
+import { InstructorRequestModule } from './instructor-request/instructor-request.module';
+import { StripeModule } from './stripe/stripe.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -63,6 +66,9 @@ import { LectureModule } from './lecture/lecture.module';
     CategoryModule,
     CourseModule,
     LectureModule,
+    InstructorRequestModule,
+    StripeModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

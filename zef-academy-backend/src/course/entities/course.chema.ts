@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { Category } from 'src/category/entities/category.chema';
+import { User } from 'src/users/entities/user.chema';
 
 export type UserDocument = HydratedDocument<Course>;
 
@@ -25,30 +26,46 @@ export class Course {
   @Prop({ type: Number, min: 0 })
   price: number;
 
-  @Prop({ type: Number, min: 0 })
-  price_after_discount: number;
+  @Prop({ type: Number, min: 0 ,default : 0})
+  discount: number;
+
+    @Prop({ type: Number, min: 0 })
+  priceAfterDiscount: number;
 
   @Prop({ type: Boolean, default: false })
   isPublished: boolean;
 
-    @Prop({
+  @Prop({ type: Boolean, default: false })
+  isFree: boolean;
+
+  @Prop({
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     ref: Category.name,
   })
   category: string;
 
-  // Category	Object ID  Ref: “Categories”
-  // Lecture	Object ID  Ref: “Lecture”
-  // teacher	Object ID  Ref: “User”
-  // Ratings Average	Number, default: 0
-  // Ratings Quantity	Number, default: 0
-  // attachment  Attachment[]
-  // purchases   Purchase[]
+    @Prop({ type: Number, min : 0 ,max: 5 })
+  rating: number;
+
+    @Prop({ type: Number , default : 0})
+  reviewsNumber: number;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: User.name,
+  })
+  instructor: string;
+
+
+@Prop({
+  type: [mongoose.Schema.Types.ObjectId],
+  ref: User.name,
+  default: [],
+})
+users: string[];
+
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);
-
-
-
-
