@@ -216,7 +216,7 @@ if ((createCourseDto.price - createCourseDto.discount) < 10) {
     }
     await this.lectureService.deleteLecturesForCourse(course._id.toString())
     await course?.deleteOne();
-    return { message: `Course with id (${id}) was removed` };
+    return { message: `Course with id (${id}) has removed` };
   }
 
     async updateCourseToPublish(id: string) {
@@ -233,7 +233,7 @@ if ((createCourseDto.price - createCourseDto.discount) < 10) {
       const course = await this.findOne(id);
 
         if (course.instructor.toString() !== user.id.toString()) {
-      throw new UnauthorizedException("you are not allowed to access this route")
+      throw new UnauthorizedException("you are not allowed to access this route");
     }
 
       const lectures = await this.lectureService.getCourseLectures(id);

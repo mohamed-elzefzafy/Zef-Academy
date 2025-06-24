@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
@@ -7,6 +16,7 @@ import { UserRoles } from 'src/shared/enums/roles.enum';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CurrentUser } from 'src/auth/decorator/current-user.decorator';
 import { JwtPayloadType } from 'src/shared/types';
+import { ParseObjectIdPipe } from '@nestjs/mongoose';
 
 @Controller('v1/reviews')
 export class ReviewsController {
@@ -22,24 +32,45 @@ export class ReviewsController {
     return this.reviewsService.create(createReviewDto, user);
   }
 
+  @Get('find-all/:courseId')
+  findAll(@Param('courseId', ParseObjectIdPipe) courseId: string) {
+    return this.reviewsService.findAll(courseId);
+  }
 
   @Get()
-  findAll() {
-    return this.reviewsService.findAll();
+  @Roles([UserRoles.ADMIN])
+  @UseGuards(AuthGuard)
+  findAllAdmin() {
+    return this.reviewsService.findAllAdmin();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reviewsService.findOne(+id);
+  findOne(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.reviewsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateReviewDto: UpdateReviewDto) {
-    return this.reviewsService.update(+id, updateReviewDto);
+  @Roles([UserRoles.INSTRUCTOR, UserRoles.USER])
+  @UseGuards(AuthGuard)
+  update(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @Body() updateReviewDto: UpdateReviewDto,
+    @CurrentUser() user: JwtPayloadType,
+  ) {
+    return this.reviewsService.update(id, updateReviewDto, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reviewsService.remove(+id);
+  @Roles([UserRoles.INSTRUCTOR, UserRoles.USER])
+  @UseGuards(AuthGuard)
+  remove(@Param('id') id: string, @CurrentUser() user: JwtPayloadType) {
+    return this.reviewsService.remove(id,user);
+  }
+
+    @Delete('admin-instructor-remove/:id')
+  @Roles([UserRoles.INSTRUCTOR, UserRoles.ADMIN])
+  @UseGuards(AuthGuard)
+  removeAdminAndInstructor(@Param('id') id: string, @CurrentUser() user: JwtPayloadType) {
+    return this.reviewsService.removeAdminAndInstructor(id,user);
   }
 }

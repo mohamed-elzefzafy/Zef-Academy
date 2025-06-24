@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { JwtPayloadType } from 'src/shared/types';
@@ -6,6 +11,8 @@ import { CourseService } from 'src/course/course.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Review } from './entities/review.schema';
 import { Model } from 'mongoose';
+import { Course } from 'src/course/entities/course.chema';
+import { UserRoles } from 'src/shared/enums/roles.enum';
 
 @Injectable()
 export class ReviewsService {
@@ -53,19 +60,68 @@ export class ReviewsService {
     return review;
   }
 
-  findAll() {
-    return `This action returns all reviews`;
+  async findAll(courseId: string) {
+    const courseReviews = await this.reviewModel.find({ course: courseId });
+    return courseReviews;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} review`;
+  async findAllAdmin() {
+    const courseReviews = await this.reviewModel.find();
+    return courseReviews;
   }
 
-  update(id: number, updateReviewDto: UpdateReviewDto) {
-    return `This action updates a #${id} review`;
+  async findOne(id: string) {
+    const review = await this.reviewModel.findById(id);
+    if (!review) {
+      throw new NotFoundException(`ther's no review with this id : ${id}`);
+    }
+
+    return review;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} review`;
+  async update(id: string, updateReviewDto: UpdateReviewDto, user: JwtPayloadType) {
+  const review = await this.reviewModel.findById(id);
+
+  if (!review) {
+      throw new NotFoundException(`ther's no review with this id : ${id}`);
+    }
+if (review.user.toString() !== user.id.toString()) {
+  throw new UnauthorizedException("you are not allowed to access this route");
+}
+  Object.assign(review , updateReviewDto);
+  return review;
+
+  }
+
+  async remove(id: string, user: JwtPayloadType) {
+    const review = await this.reviewModel.findById(id);
+
+  if (!review) {
+      throw new NotFoundException(`ther's no review with this id : ${id}`);
+    }
+if (review.user.toString() !== user.id.toString()) {
+  throw new UnauthorizedException("you are not allowed to access this route");
+}
+await review.deleteOne();
+
+  return { message: `Review with id (${id}) has removed` };
+  }
+
+    async removeAdminAndInstructor(id: string, user: JwtPayloadType) {
+    const review = await this.reviewModel.findById(id);
+
+  if (!review) {
+      throw new NotFoundException(`ther's no review with this id : ${id}`);
+    }
+
+        const course = await this.courseService.findOneWithoutpopulate(
+      review.course,
+    );
+if (course.instructor.toString() !== user.id.toString() && user.role !== UserRoles.ADMIN) {
+  throw new UnauthorizedException("you are not allowed to access this route");
+}
+await review.deleteOne();
+
+  return { message: `Review with id (${id}) has removed` };
   }
 }
