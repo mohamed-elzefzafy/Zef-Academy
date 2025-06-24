@@ -3,8 +3,7 @@ import { TestService } from './test.service';
 import { TestController } from './test.controller';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { TestSchema } from './entities/TestSchema';
-import { Test } from '@nestjs/testing';
+import { Test, TestSchema } from './entities/TestSchema';
 
 @Module({
   controllers: [TestController],
