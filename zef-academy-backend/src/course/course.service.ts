@@ -366,13 +366,21 @@ export class CourseService {
     const course = await this.findOne(courseId);
 
 
-let subscriberUsers = course.users || [];
-subscriberUsers.push(userId);
+// let subscriberUsers = course.users || [];
+// subscriberUsers.push(userId);
 
-    subscriberUsers = [...new Set(subscriberUsers)]; // Remove duplicates
+//     subscriberUsers = [...new Set(subscriberUsers)]; // Remove duplicates
       
-    course.users = subscriberUsers;
+//     course.users = subscriberUsers;
+if (course.users.find(id => id.toString() === userId.toString()))  {
+      throw new BadRequestException(
+        'the user is already subscribed to the course',
+      );
+} else {
+    course.users.push(userId);
     course.sold += 1;
+}
+    
 
     await course.save();
     return course;
