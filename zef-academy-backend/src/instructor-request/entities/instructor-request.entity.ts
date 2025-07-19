@@ -6,7 +6,7 @@ import { User } from 'src/users/entities/user.chema';
 export type UserDocument = HydratedDocument<InstructorRequest>;
 @Schema({ timestamps: true })
 export class InstructorRequest {
-  @Prop({ type: String, RequestStatue, default: RequestStatue.NULL })
+  @Prop({ type: String, RequestStatue})
   requestStatueTitle: RequestStatue;
 
   @Prop({

@@ -10,18 +10,18 @@ export class Lecture {
   title: string;
 
   @Prop({
-    type: { url: String, public_id: String },
+    type: { url: String, public_id: String , videoDuration: String , originalDuration: Number },
     _id: false,
     required: false,
   })
-  videoUrl: { url: string; public_id: string };
+  videoUrl: { url: string; public_id: string , videoDuration : string , originalDuration: number };
 
   @Prop({
-    type: [{ url: String, public_id: String }],
+    type: [{ url: String, public_id: String, originalName: String }],
     _id: false,
     required: false,
   })
-  attachments: { url: string; public_id: string }[];
+  attachments: { url: string; public_id: string; originalName: string }[];
 
   @Prop({ type: Number, min: 0 })
   position: number;

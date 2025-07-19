@@ -61,7 +61,8 @@ export class ReviewsService {
   }
 
   async findAll(courseId: string) {
-    const courseReviews = await this.reviewModel.find({ course: courseId });
+   await this.courseService.findOneWithoutpopulate(courseId);
+    const courseReviews = await this.reviewModel.find({ course: courseId }).populate("user");
     return courseReviews;
   }
 
@@ -89,6 +90,7 @@ if (review.user.toString() !== user.id.toString()) {
   throw new UnauthorizedException("you are not allowed to access this route");
 }
   Object.assign(review , updateReviewDto);
+  await review.save();
   return review;
 
   }

@@ -17,7 +17,7 @@ const protectedRequest = axios.create({
 // Attach token from cookies automatically for protected requests
 protectedRequest.interceptors.request.use(async (config) => {
   const cookieStore = await cookies();
-  const tokenCookie = cookieStore.get("jwt");
+  const tokenCookie = cookieStore.get("token");
 
   if (tokenCookie) {
     config.headers.Cookie = `${tokenCookie.name}=${tokenCookie.value}`;

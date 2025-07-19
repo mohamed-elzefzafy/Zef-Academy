@@ -33,7 +33,7 @@ export class InstructorRequestService {
 
     if (!instructorRequest) {
       instructorRequest = await this.instructorRequestModel.create({
-        requestStatue: RequestStatue.SENT,
+        requestStatueTitle: RequestStatue.SENT,
         user: user.id,
       });
       return instructorRequest;
@@ -99,6 +99,16 @@ export class InstructorRequestService {
     return instructorRequest;
   }
 
+  async findCurrentUserInstructorRequest(user: JwtPayloadType) {
+    const instructorRequest = await this.instructorRequestModel.findOne({
+      user: user.id,
+    });
+    if (!instructorRequest) {
+      throw new NotFoundException(`no requset with this user`);
+    }
+    return instructorRequest;
+  }
+
   async accessResultStatu(id: string, user: JwtPayloadType, res: Response) {
     const instructorRequest = await this.findOne(id);
     if (instructorRequest.user.toString() !== user.id.toString()) {
@@ -106,7 +116,9 @@ export class InstructorRequestService {
     }
 
     if (instructorRequest.requestStatueTitle !== RequestStatue.ACCEPT) {
-      throw new BadRequestException('your instructor request has been rejected');
+      throw new BadRequestException(
+        'your instructor request has been rejected',
+      );
     }
     await instructorRequest.deleteOne();
 
@@ -127,14 +139,16 @@ export class InstructorRequestService {
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
-
-    return { message: 'you have updated to an instructor' };
+    const currentUser = await this.usersService.findOne(user.id);
+    return currentUser;
   }
 
-  async adminUpdateResultStatu(id: string, createAdminResultStatuDto: CreateAdminResultStatuDto) {
+  async adminUpdateResultStatu(
+    id: string,
+    createAdminResultStatuDto: CreateAdminResultStatuDto,
+  ) {
     const instructorRequest = await this.findOne(id);
- console.log(instructorRequest);
- 
+
     const user = await this.usersService.findOne(instructorRequest.user);
     if (instructorRequest.user.toString() !== user._id.toString()) {
       throw new BadRequestException("you can't access this route");
@@ -143,12 +157,12 @@ export class InstructorRequestService {
     if (createAdminResultStatuDto.requestStatueTitle === RequestStatue.ACCEPT) {
       instructorRequest.requestStatueTitle = RequestStatue.ACCEPT;
       user.role = UserRoles.INSTRUCTOR;
-      await user.save()
+      await user.save();
       await instructorRequest.save();
       return { message: 'your instructor request has accepted' };
     }
 
-    instructorRequest.requestStatueTitle === RequestStatue.REJECT;
+    instructorRequest.requestStatueTitle = RequestStatue.REJECT;
     await instructorRequest.save();
     return { message: 'your instructor request has been rejected' };
   }

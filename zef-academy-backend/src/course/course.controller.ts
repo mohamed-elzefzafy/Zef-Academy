@@ -42,14 +42,15 @@ export class CourseController {
   }
 
   @Get()
-  findAll(
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = `${PAGE_LIMIT_ADMIN}`,
-    @Query('category') category?: string,
-    @Query('user') user?: string,
-  ) {
-    return this.courseService.findAll(+page, +limit, category, user);
-  }
+findAll(
+  @Query('page') page: string = '1',
+  @Query('limit') limit: string = `${PAGE_LIMIT_ADMIN}`,
+  @Query('category') category?: string,
+  @Query('user') user?: string,
+  @Query('search') search?: string,
+) {
+  return this.courseService.findAll(+page, +limit, category, user, search);
+}
   @Get(':id')
   findOne(@Param('id', ParseObjectIdPipe) id: string) {
     return this.courseService.findOne(id);

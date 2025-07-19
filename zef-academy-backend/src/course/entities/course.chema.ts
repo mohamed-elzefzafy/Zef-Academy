@@ -51,6 +51,10 @@ export class Course {
     @Prop({ type: Number , default : 0})
   reviewsNumber: number;
 
+      @Prop({ type: String , default : "00:00"})
+  videosLength: string;
+
+
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     required: true,

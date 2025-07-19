@@ -3,7 +3,7 @@ import { CreateSessionRequestDto } from './dto/create-session.dto';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { CourseService } from 'src/course/course.service';
-import { JwtPayloadType } from 'src/shared/types';
+
 
 @Injectable()
 export class StripeService {
@@ -22,16 +22,20 @@ export class StripeService {
       throw new BadRequestException("the course is not published")
     }
     
+      if(course.isFree) {
+      throw new BadRequestException("the course is free you can subscribe to it without payment")
+    }
     
-if (course.isFree) {
-if (!course.users.includes(userId)) {
-  course.users.push(userId);
-  await course.save();
-  return {message :`you have subscribed to ${course.title} cousre`}
-} else {
-    return {message :`you already subscribed to ${course.title} cousre`}
-}
-}
+    
+// if (course.isFree) {
+// if (!course.users.includes(userId)) {
+//   course.users.push(userId);
+//   await course.save();
+//   return {message :`you have subscribed to ${course.title} cousre`}
+// } else {
+//     return {message :`you already subscribed to ${course.title} cousre`}
+// }
+// }
     return this.stripe.checkout.sessions.create({
       metadata: {
         courseId,
@@ -52,11 +56,13 @@ if (!course.users.includes(userId)) {
         },
       ],
       mode: 'payment',
-      success_url: this.configService.getOrThrow('STRIPE_SUCCESS_URL'),
-      cancel_url: this.configService.getOrThrow('STRIPE_CANCEL_URL'),
+      success_url: `${this.configService.getOrThrow('STRIPE_SUCCESS_URL')}/course/${courseId}`,
+      cancel_url:   this.configService.getOrThrow('STRIPE_CANCEL_URL'),
     });
   }
 async handleCheckoutWebhook(event: any) {
+  console.log(event);
+  
   if (event.type !== 'checkout.session.completed') return;
 
   const session = await this.stripe.checkout.sessions.retrieve(
@@ -68,6 +74,7 @@ async handleCheckoutWebhook(event: any) {
   if (!metadata || !metadata.courseId || !metadata.userId) {
     throw new NotFoundException("Missing session metadata (courseId/userId)");
   }
+console.log("ggggggggggggggggggggggg");
 
   // ✅ مرر userId مباشرة
   await this.courseService.updateCheckOut(metadata.courseId, metadata.userId );

@@ -67,10 +67,17 @@ export class InstructorRequestController {
     return this.instructorRequestService.accessResultStatu(id, user, res);
   }
 
-  @Get(':id')
+  @Get('instructor-request/:id')
   @UseGuards(AuthGuard)
   findOne(@Param('id', ParseObjectIdPipe) id: string) {
     return this.instructorRequestService.findOne(id);
+  }
+
+    @Get('currentUser-instructor-request')
+  @Roles([UserRoles.USER])
+  @UseGuards(AuthGuard)
+  findCurrentUserInstructorRequest(@CurrentUser() user: JwtPayloadType) {
+    return this.instructorRequestService.findCurrentUserInstructorRequest(user);
   }
 
   // @Patch(':id')

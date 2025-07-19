@@ -17,11 +17,22 @@ export class CloudinaryPDFService {
       return new Promise<any>((resolve, reject) => {
         // Set up the upload stream with Cloudinary options for PDFs
         const uploadStream = cloudinaryV2.uploader.upload_stream(
-          { resource_type: 'raw', folder: `Zef-Academy/${folder}`, format: 'pdf' },
+          {
+            resource_type: 'raw',
+            folder: `Zef-Academy/${folder}`,
+            format: 'pdf',
+            type: 'upload',
+            overwrite: true,
+            access_mode: 'public',
+          },
           (error, result) => {
             if (error) {
               console.error('Error uploading PDF to Cloudinary:', error);
-              reject(new InternalServerErrorException('Cloudinary PDF upload failed'));
+              reject(
+                new InternalServerErrorException(
+                  'Cloudinary PDF upload failed',
+                ),
+              );
             }
             resolve(result);
           },
@@ -31,7 +42,10 @@ export class CloudinaryPDFService {
         uploadStream.end(file.buffer);
       });
     } catch (error) {
-      console.error('Internal server error during Cloudinary PDF upload:', error);
+      console.error(
+        'Internal server error during Cloudinary PDF upload:',
+        error,
+      );
       throw new InternalServerErrorException(
         'Internal server error during Cloudinary PDF upload',
       );
@@ -48,7 +62,11 @@ export class CloudinaryPDFService {
           (error, result) => {
             if (error) {
               console.error('Error removing PDF from Cloudinary:', error);
-              reject(new InternalServerErrorException('Cloudinary PDF removal failed'));
+              reject(
+                new InternalServerErrorException(
+                  'Cloudinary PDF removal failed',
+                ),
+              );
             } else {
               resolve(result);
             }
@@ -56,7 +74,10 @@ export class CloudinaryPDFService {
         );
       });
     } catch (error) {
-      console.error('Internal server error during Cloudinary PDF removal:', error);
+      console.error(
+        'Internal server error during Cloudinary PDF removal:',
+        error,
+      );
       throw new InternalServerErrorException(
         'Internal server error during Cloudinary PDF removal',
       );
@@ -72,7 +93,10 @@ export class CloudinaryPDFService {
           { resource_type: 'raw' },
           (error, result) => {
             if (error) {
-              console.error('Error removing multiple PDFs from Cloudinary:', error);
+              console.error(
+                'Error removing multiple PDFs from Cloudinary:',
+                error,
+              );
               reject(
                 new InternalServerErrorException(
                   'Cloudinary multiple PDF removal failed',
