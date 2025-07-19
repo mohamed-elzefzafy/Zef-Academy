@@ -363,7 +363,7 @@ export class CourseService {
   }
 
   async updateCheckOut(courseId: string, userId: string) {
-    const course = await this.findOne(courseId);
+    const course = await this.findOneWithoutpopulate(courseId);
 
 
 // let subscriberUsers = course.users || [];
