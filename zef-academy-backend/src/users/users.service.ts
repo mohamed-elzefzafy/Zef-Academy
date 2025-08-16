@@ -68,7 +68,7 @@ export class UsersService {
       .sort({ role: 1, createdAt: 1 }) // ASC sorting
       .skip(skip)
       .limit(limitNumber)
-      .populate("users")
+      // .populate("users")
       .exec();
 
   const total = await this.userModel.countDocuments().exec();
