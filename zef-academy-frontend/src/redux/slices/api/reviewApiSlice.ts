@@ -1,5 +1,5 @@
 import { apiSlice } from "./apiSlice";
-import { IReview } from "@/types/review";
+import { IReview, IReviewResponse } from "@/types/review";
 
 export interface IReviewInput {
   comment: string;
@@ -21,6 +21,15 @@ export const reviewsApiSlice = apiSlice.injectEndpoints({
       keepUnusedDataFor: 5,
       providesTags: ["Review"],
     }),
+
+        getAdminReviews: builder.query<IReviewResponse, string>({
+      query: () => ({
+        url: `/api/v1/reviews/admin-find-all-reviews`,
+      }),
+      keepUnusedDataFor: 5,
+      providesTags: ["Review"],
+    }),
+
 
     getAllReviewsAdmin: builder.query<IReview[], void>({
       query: () => ({
@@ -72,4 +81,5 @@ export const {
   useUpdateReviewMutation,
   useDeleteReviewMutation,
   useDeleteReviewByAdminMutation,
+  useGetAdminReviewsQuery,
 } = reviewsApiSlice;

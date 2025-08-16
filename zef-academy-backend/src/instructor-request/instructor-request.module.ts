@@ -21,5 +21,6 @@ import { UsersModule } from 'src/users/users.module';
   ],
   controllers: [InstructorRequestController],
   providers: [InstructorRequestService],
+  exports:[InstructorRequestService]
 })
 export class InstructorRequestModule {}

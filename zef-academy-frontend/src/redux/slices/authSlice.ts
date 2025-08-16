@@ -18,6 +18,7 @@ const initialState : IUserInfoObject ={
     isAccountVerified:  false,
     verificationCode:  null,
     role: "user",
+    wishlist:[],
   
     // posts: PostEntity[];
   
@@ -50,6 +51,7 @@ const authSlice = createSlice({
         isAccountVerified:  false,
         verificationCode:  null,
         role: "user",
+        wishlist:[],
       
         // posts: PostEntity[];
       

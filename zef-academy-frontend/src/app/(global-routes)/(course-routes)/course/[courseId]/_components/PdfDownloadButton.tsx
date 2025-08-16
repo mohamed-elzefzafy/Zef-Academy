@@ -14,13 +14,14 @@ const PdfDownloadButton = ({ url,originalName ="Download PDF" }: { url: string ,
 
   return (
     <Button
-      variant="contained"
+      variant="outlined"
       size="small"
       color="primary"
       startIcon={<DownloadIcon />}
       onClick={handleDownload}
+      sx={{textTransform:"capitalize"}}
     >
-    {originalName}
+    {originalName.length >25 ? originalName.slice(0 , 25) + "..." + ".pdf" : originalName}
     </Button>
   );
 };

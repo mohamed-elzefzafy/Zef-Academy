@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { defaultProfileImage } from 'src/shared/constants';
 import { UserRoles } from 'src/shared/enums/roles.enum';
 
@@ -34,6 +34,9 @@ export class User {
   },
   })
   profileImage: { url: string; public_id: string };
+
+   @Prop({ type: [{ type: Types.ObjectId, ref: 'Course' }], default: [] })
+  wishlist: Types.ObjectId[]; 
 
   @Prop({ type: String, UserRoles, default: UserRoles.USER })
   role: UserRoles;

@@ -66,10 +66,47 @@ export class ReviewsService {
     return courseReviews;
   }
 
-  async findAllAdmin() {
-    const courseReviews = await this.reviewModel.find();
-    return courseReviews;
-  }
+  // async findAllAdmin() {
+  //   const courseReviews = await this.reviewModel.find();
+  //   return courseReviews;
+  // }
+
+    public async findAllAdmin(page: number, limit: number) {
+  // Ensure page and limit are positive integers
+  const pageNumber = Math.max(1, page);
+  const limitNumber = Math.max(1, limit);
+
+  // Calculate skip (offset) for pagination
+  const skip = (pageNumber - 1) * limitNumber;
+
+  // Fetch users and total count using Mongoose
+  const reviews = await this.reviewModel
+      .find()
+      .sort({ course: 1, createdAt: 1 }) // ASC sorting
+      .populate("user")
+      .populate("course")
+      .skip(skip)
+      .limit(limitNumber)
+      .exec();
+
+  const total = await this.reviewModel.countDocuments().exec();
+
+
+  // Calculate total pages
+  const pagesCount = Math.ceil(total / limitNumber);
+
+  // Return paginated result
+  return {
+    reviews,
+    pagination: {
+      total,
+      page: pageNumber,
+      limit: limitNumber,
+      pagesCount,
+    },
+  };
+}
+
 
   async findOne(id: string) {
     const review = await this.reviewModel.findById(id);
@@ -125,5 +162,9 @@ if (course.instructor.toString() !== user.id.toString() && user.role !== UserRol
 await review.deleteOne();
 
   return { message: `Review with id (${id}) has removed` };
+  }
+
+      getAdminReviewCount() {
+    return this.reviewModel.countDocuments();
   }
 }

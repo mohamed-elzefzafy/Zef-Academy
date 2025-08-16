@@ -85,7 +85,7 @@ export class AuthController {
   }
 
   @Patch()
-  @Roles([UserRoles.USER, UserRoles.ADMIN])
+  @Roles([UserRoles.USER, UserRoles.ADMIN ,UserRoles.INSTRUCTOR])
   @UseGuards(AuthGuard)
   @UseInterceptors(FileInterceptor('profileImage'))
   public async updateCurrentUser(
@@ -97,7 +97,7 @@ export class AuthController {
   }
 
   @Delete('delete-current-user')
-  @Roles([UserRoles.ADMIN, UserRoles.USER])
+  @Roles([UserRoles.ADMIN, UserRoles.USER , UserRoles.INSTRUCTOR])
   @UseGuards(AuthGuard)
   remove(@CurrentUser() user: JwtPayloadType) {
     return this.authService.remove(user.id);

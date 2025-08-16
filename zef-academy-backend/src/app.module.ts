@@ -18,6 +18,7 @@ import { LectureModule } from './lecture/lecture.module';
 import { InstructorRequestModule } from './instructor-request/instructor-request.module';
 import { StripeModule } from './stripe/stripe.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { WishListModule } from './wish-list/wish-list.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     InstructorRequestModule,
     StripeModule,
     ReviewsModule,
+    WishListModule,
   ],
   controllers: [AppController],
   providers: [AppService],

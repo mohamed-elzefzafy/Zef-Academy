@@ -20,7 +20,7 @@ export class CategoryService {
     @InjectModel(Category.name)
     private readonly categoryModel: Model<Category>,
     private readonly cloudinaryService: CloudinaryService,
-    @Inject(forwardRef(()=>CourseService))
+    @Inject(forwardRef(() => CourseService))
     private readonly courseService: CourseService,
   ) {}
   public async create(
@@ -32,16 +32,19 @@ export class CategoryService {
     });
 
     if (category) throw new BadRequestException('category is exist already');
-let image = {};
+    if (!file) throw new BadRequestException('image is required');
+    let image = {};
     if (file) {
-      const result = await this.cloudinaryService.uploadImage(file , "categories");
+      const result = await this.cloudinaryService.uploadImage(
+        file,
+        'categories',
+      );
       image = {
         url: result.secure_url,
         public_id: result.public_id,
       };
     }
-    category = await this.categoryModel.create({...createCategoryDto , image});
-
+    category = await this.categoryModel.create({ ...createCategoryDto, image });
 
     return category;
   }
@@ -90,24 +93,33 @@ let image = {};
     return category;
   }
 
-  public async update(id: string, updateCategoryDto: UpdateCategoryDto, file: Express.Multer.File) {
+  public async update(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+    file: Express.Multer.File,
+  ) {
     const category = await this.findOne(id);
-    if (!category) throw new NotFoundException('category not found');
+    if (!category) {
+      throw new NotFoundException('category not found');
+    }
     const existCategory = await this.categoryModel.findOne({
       title: updateCategoryDto.title,
     });
-    if (existCategory)
+    if (existCategory && existCategory._id.toString() !== category._id.toString()) {
       throw new BadRequestException("there's category with this name");
+    }
+
     Object.assign(category, updateCategoryDto);
 
-      if (file) {
+    if (file) {
       if (category.image) {
-        await this.cloudinaryService.removeImage(
-          category.image.public_id,
-        );
+        await this.cloudinaryService.removeImage(category.image.public_id);
       }
 
-      const result = await this.cloudinaryService.uploadImage(file, 'categories');
+      const result = await this.cloudinaryService.uploadImage(
+        file,
+        'categories',
+      );
       category.image = {
         url: result.secure_url,
         public_id: result.public_id,
@@ -117,7 +129,7 @@ let image = {};
     return category;
   }
 
-  public async remove(id: string,user: JwtPayloadType) {
+  public async remove(id: string, user: JwtPayloadType) {
     const category = await this.findOne(id);
     if (!category) throw new NotFoundException('category not found');
 
@@ -137,13 +149,11 @@ let image = {};
     // }
 
     for (let i = 0; i < courses.length; i++) {
-    await this.courseService.remove(courses[i]._id.toString(),user);  
+      await this.courseService.remove(courses[i]._id.toString(), user);
     }
     if (category.image) {
-        await this.cloudinaryService.removeImage(
-          category.image.public_id,
-        );
-      }
+      await this.cloudinaryService.removeImage(category.image.public_id);
+    }
     await category.deleteOne();
 
     return { message: `category with id (${id}) was removed` };

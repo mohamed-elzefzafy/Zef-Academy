@@ -1,7 +1,6 @@
 import { CloudinaryObject, IUserInfo } from "./auth";
 import { ICategory } from "./category";
 
-
 export interface ICourse {
   _id: string;
   title: string;
@@ -11,20 +10,34 @@ export interface ICourse {
   sold: number;
   price: number;
   discount: number;
-  priceAfterDiscount: number;
+  finalPrice: number;
   isPublished: boolean;
   isFree: boolean;
   reviewsNumber: number;
   instructor: IUserInfo;
-  users: string[];
-  videosLength :string;
+  users: IUserInfo[];
+  videosLength: string;
   rating: number;
   createdAt: string;
   updatedAt: string;
 }
 
+export interface ICourseData {
+  title: string;
+  description: string;
+  price: number;
+  thumbnail: CloudinaryObject;
+  category: string;
+  discount: number;
+    isFree: boolean;
+}
+
 export interface ICourseResponse {
   courses: ICourse[];
+  pagination: Pagination;
+}
+export interface IWishlistResponse {
+  wishlist: ICourse[];
   pagination: Pagination;
 }
 

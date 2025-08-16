@@ -46,7 +46,7 @@ export class InstructorRequestController {
     return this.instructorRequestService.findAll(+page, +limit, category, user);
   }
 
-  @Patch('accessResultStatu/:id')
+  @Patch('adminUpdateResultStatu/:id')
   @Roles([UserRoles.ADMIN])
   @UseGuards(AuthGuard)
   adminUpdateResultStatu(
@@ -57,7 +57,7 @@ export class InstructorRequestController {
   }
 
   @Delete('accessResultStatu/:id')
-  @Roles([UserRoles.USER, UserRoles.INSTRUCTOR])
+  @Roles([UserRoles.USER, UserRoles.INSTRUCTOR ,UserRoles.ADMIN])
   @UseGuards(AuthGuard)
   accessResultStatu(
     @Param('id', ParseObjectIdPipe) id: string,
@@ -66,6 +66,16 @@ export class InstructorRequestController {
   ) {
     return this.instructorRequestService.accessResultStatu(id, user, res);
   }
+
+    @Delete('adminDeleteRequest/:id')
+  @Roles([UserRoles.ADMIN])
+  @UseGuards(AuthGuard)
+  adminDeleteRequest(
+    @Param('id', ParseObjectIdPipe) id: string,
+  ) {
+    return this.instructorRequestService.adminDeleteRequest(id);
+  }
+
 
   @Get('instructor-request/:id')
   @UseGuards(AuthGuard)

@@ -23,7 +23,7 @@ export class Lecture {
   })
   attachments: { url: string; public_id: string; originalName: string }[];
 
-  @Prop({ type: Number, min: 0 })
+  @Prop({ type: Number, min: 1 })
   position: number;
 
   @Prop({ type: Boolean, default: false })

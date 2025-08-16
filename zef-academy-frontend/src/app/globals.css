@@ -7,11 +7,17 @@
 a {
   text-decoration: none !important;
   color: inherit !important;
+  cursor: pointer;
 }
 
 .red {
   border: 2px solid red;
 }
+
 .blue {
   border: 2px solid blue;
+}
+
+.green {
+  border: 2px solid green;
 }

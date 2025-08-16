@@ -69,6 +69,7 @@ export class InstructorRequestService {
       .sort({ role: 1, createdAt: 1 }) // ASC sorting
       .skip(skip)
       .limit(limitNumber)
+      .populate('user')
       .exec();
 
     // Count total documents (with filter if applied)
@@ -107,6 +108,14 @@ export class InstructorRequestService {
       throw new NotFoundException(`no requset with this user`);
     }
     return instructorRequest;
+  }
+
+  async adminDeleteRequest(id: string) {
+    const instructorRequest = await this.findOne(id);
+
+    await instructorRequest.deleteOne();
+
+    return { message: 'instructor request deleted' };
   }
 
   async accessResultStatu(id: string, user: JwtPayloadType, res: Response) {
@@ -150,9 +159,9 @@ export class InstructorRequestService {
     const instructorRequest = await this.findOne(id);
 
     const user = await this.usersService.findOne(instructorRequest.user);
-    if (instructorRequest.user.toString() !== user._id.toString()) {
-      throw new BadRequestException("you can't access this route");
-    }
+    // if (instructorRequest.user.toString() !== user._id.toString()) {
+    //   throw new BadRequestException("you can't access this route");
+    // }
 
     if (createAdminResultStatuDto.requestStatueTitle === RequestStatue.ACCEPT) {
       instructorRequest.requestStatueTitle = RequestStatue.ACCEPT;
@@ -160,11 +169,11 @@ export class InstructorRequestService {
       await user.save();
       await instructorRequest.save();
       return { message: 'your instructor request has accepted' };
+    } else {
+      instructorRequest.requestStatueTitle = RequestStatue.REJECT;
+      await instructorRequest.save();
+      return { message: 'your instructor request has been rejected' };
     }
-
-    instructorRequest.requestStatueTitle = RequestStatue.REJECT;
-    await instructorRequest.save();
-    return { message: 'your instructor request has been rejected' };
   }
   // update(id: number, updateInstructorRequestDto: UpdateInstructorRequestDto) {
   //   return `This action updates a #${id} instructorRequest`;
@@ -172,5 +181,9 @@ export class InstructorRequestService {
 
   remove(id: number) {
     return `This action removes a #${id} instructorRequest`;
+  }
+
+      getAdminInstructorRequestCount() {
+    return this.instructorRequestModel.countDocuments();
   }
 }

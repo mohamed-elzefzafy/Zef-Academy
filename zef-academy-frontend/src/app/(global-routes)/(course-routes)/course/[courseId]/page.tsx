@@ -2,10 +2,10 @@ import axiosRequest from "@/utils/request";
 import { ICourse } from "@/types/course";
 import CourseContent from "./_components/CourseContent";
 
-const PostPage = async ({
+const CoursePage = async ({
   params,
 }: {
-  params: Promise<{ courseId: string }>;
+  params: { courseId: string };
 }) => {
   if (!(await params).courseId) return;
   const { data: course } = await axiosRequest.get<ICourse>(
@@ -17,4 +17,4 @@ const PostPage = async ({
   return <CourseContent course={course} />;
 };
 
-export default PostPage;
+export default CoursePage;

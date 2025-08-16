@@ -1,5 +1,5 @@
 import { apiSlice } from "./apiSlice";
-import { ICurrentUserInstructorRequest } from "@/types/InstructorRequest";
+import { ICurrentUserInstructorRequest, IInstructorRequestResponse } from "@/types/InstructorRequest";
 
 export const instructorRequestApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,6 +7,12 @@ export const instructorRequestApiSlice = apiSlice.injectEndpoints({
       query: () => ({
         url: `/api/v1/instructor-request`,
         method: "POST",
+      }),
+    }),
+
+        getAllInstructorRequest: builder.query<IInstructorRequestResponse ,string| void>({
+      query: () => ({
+        url: `/api/v1/instructor-request`,
       }),
     }),
 
@@ -24,6 +30,45 @@ export const instructorRequestApiSlice = apiSlice.injectEndpoints({
         method: "DELETE",
       }),
     }),
+
+        deleteInstructorRequestAdminInstructorPage: builder.mutation<void, { _id: string; page?: number }>({
+          query: ({ _id }) => ({
+            url: `/api/v1/instructor-request/adminDeleteRequest/${_id}`,
+            method: "DELETE",
+          }),
+          async onQueryStarted({ _id, page }, { dispatch, queryFulfilled }) {
+            const queryParams = `?page=${page}`;
+            const patchResult = dispatch(
+              instructorRequestApiSlice.util.updateQueryData(
+                "getAllInstructorRequest",
+                queryParams,
+                (draft: IInstructorRequestResponse) => {
+                  draft.instructorRequest = draft.instructorRequest.filter((request) => request._id !== _id);
+                  draft.pagination.total -= 1;
+                  if (draft.instructorRequest.length === 0 && page && page > 1) {
+                    draft.pagination.page = page - 1;
+                  }
+                }
+              )
+            );
+            try {
+              await queryFulfilled;
+            } catch {
+              patchResult.undo();
+            }
+          },
+          invalidatesTags: (result, error, { _id }) => [{ type: "InstructorRequest", _id }],
+        }),
+
+
+          updateInstructorRequestStatu: builder.mutation({
+      query: ({ payLoad, requestId }) => ({
+        url: `/api/v1/instructor-request/adminUpdateResultStatu/${requestId}`,
+        method: "PATCH",
+        body: payLoad,
+      }),
+    }),
+    
 
     // getCategories: builder.query<ICategoryResponse, void>({
     //   query: () => ({
@@ -112,4 +157,7 @@ export const {
   useCreateInstructorRequestMutation,
   useGetCurrentUserInstructorRequestQuery,
   useAccessResultStatuMutation,
+  useGetAllInstructorRequestQuery,
+  useDeleteInstructorRequestAdminInstructorPageMutation,
+  useUpdateInstructorRequestStatuMutation,
 } = instructorRequestApiSlice;

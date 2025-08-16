@@ -36,21 +36,22 @@ const VerifyAccountPage = () => {
           gap: 2,
         }}
       >
-        <Typography variant="h6" component="h2">
-      verify-your-account
+        <Typography variant="h6" component="h2" sx={{ mt: 2 }}>
+      Verify Your Account
         </Typography>
 
   
 
         <Button
           // type="submit"
+          size='large'
           variant="contained"
           color="primary"
           sx={{ mt: 2, textTransform: "capitalize", width: "100%" }}
           onClick={handleVerifyAccount}
           // disabled={}
         >
-            Send-code-to-my-email : {userInfo.email}
+          Send code to my email
         </Button>
 
       </Stack>

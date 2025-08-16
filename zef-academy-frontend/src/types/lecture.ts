@@ -1,4 +1,4 @@
-
+import { ICourse } from "./course";
 
 export interface ILecture {
   _id: string;
@@ -6,10 +6,17 @@ export interface ILecture {
   videoUrl: CloudinaryObjectVideo;
   position: number;
   isFree: boolean;
-  course: string;
+  course: ICourse;
   attachments: CloudinaryObjectPdf[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ILectureData {
+  title: string;
+  videoUrl: CloudinaryObjectVideo;
+  position?: number;
+  course: string;
 }
 
 export interface ILectureResponse {

@@ -24,6 +24,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from 'src/auth/decorator/current-user.decorator';
 import { JwtPayloadType } from 'src/shared/types';
 import { CreateCourseDiscountDto } from './dto/create-course-discount.dto';
+import { UpdateCourseToNotFreeDto } from './dto/updateCourseToNotFree.dto';
 
 @Controller('v1/course')
 export class CourseController {
@@ -42,20 +43,51 @@ export class CourseController {
   }
 
   @Get()
-findAll(
-  @Query('page') page: string = '1',
-  @Query('limit') limit: string = `${PAGE_LIMIT_ADMIN}`,
-  @Query('category') category?: string,
-  @Query('user') user?: string,
-  @Query('search') search?: string,
-) {
-  return this.courseService.findAll(+page, +limit, category, user, search);
-}
+  findAll(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = `${PAGE_LIMIT_ADMIN}`,
+    @Query('category') category?: string,
+    @Query('user') user?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.courseService.findAll(+page, +limit, category, user, search);
+  }
+
+  @Get('instructor-courses')
+  @Roles([UserRoles.INSTRUCTOR])
+  @UseGuards(AuthGuard)
+  findAllInstructorCourses(
+    @CurrentUser() user: JwtPayloadType,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = `${PAGE_LIMIT_ADMIN}`,
+  ) {
+    return this.courseService.findAllInstructorCourses(+page, +limit, user.id);
+  }
+
+  @Get('admin-courses')
+  @Roles([UserRoles.ADMIN])
+  @UseGuards(AuthGuard)
+  findAllAdminCourses(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = `${PAGE_LIMIT_ADMIN}`,
+  ) {
+    return this.courseService.findAllAdminCourses(+page, +limit);
+  }
+
+    @Get('get-my-subscribed-courses')
+  @Roles([UserRoles.INSTRUCTOR, UserRoles.USER])
+  @UseGuards(AuthGuard)
+  findUserCourses(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = `20`,
+    @CurrentUser() user: JwtPayloadType,
+  ) {
+    return this.courseService.findUserCourses(user.id ,+page , +limit);
+  }
   @Get(':id')
   findOne(@Param('id', ParseObjectIdPipe) id: string) {
     return this.courseService.findOne(id);
   }
-
   @Patch(':id')
   @Roles([UserRoles.ADMIN, UserRoles.INSTRUCTOR])
   @UseGuards(AuthGuard)
@@ -75,14 +107,29 @@ findAll(
     return this.courseService.updateCourseToPublish(id);
   }
 
-  @Patch('toggle-course-Free/:id')
+  @Patch('make-course-notFree/:id')
   @Roles([UserRoles.INSTRUCTOR])
   @UseGuards(AuthGuard)
-  toggleCourseToFreeOrNot(
+  updateCourseToNotFree(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @CurrentUser() user: JwtPayloadType,
+    @Body() updateCourseToNotFreeDto: UpdateCourseToNotFreeDto,
+  ) {
+    return this.courseService.updateCourseToNotFree(
+      id,
+      user,
+      updateCourseToNotFreeDto,
+    );
+  }
+
+  @Patch('make-course-Free/:id')
+  @Roles([UserRoles.INSTRUCTOR])
+  @UseGuards(AuthGuard)
+  updateCourseToFree(
     @Param('id', ParseObjectIdPipe) id: string,
     @CurrentUser() user: JwtPayloadType,
   ) {
-    return this.courseService.toggleCourseToFreeOrNot(id , user);
+    return this.courseService.updateCourseToFree(id, user);
   }
 
   @Patch('create-discount/:id')
@@ -91,13 +138,13 @@ findAll(
   createCourseDiscount(
     @Param('id', ParseObjectIdPipe) id: string,
     @CurrentUser() user: JwtPayloadType,
-    @Body() createCourseDiscountDto : CreateCourseDiscountDto
+    @Body() createCourseDiscountDto: CreateCourseDiscountDto,
   ) {
-    if (createCourseDiscountDto.discount === 0) {
-      throw new BadRequestException("the price after discount must be more than 10");
-    }
-    
-    return this.courseService.createCourseDiscount(id ,user,createCourseDiscountDto.discount);
+    return this.courseService.createCourseDiscount(
+      id,
+      user,
+      createCourseDiscountDto.discount,
+    );
   }
 
   @Delete(':id')
@@ -109,4 +156,6 @@ findAll(
   ) {
     return this.courseService.remove(id, user);
   }
+
+
 }

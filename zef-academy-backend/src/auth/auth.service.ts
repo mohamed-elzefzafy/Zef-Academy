@@ -204,7 +204,7 @@ export class AuthService {
   }
 
   public async getCurrentUser(user: JwtPayloadType) {
-    const currentUser = await this.userModel.findOne({ _id: user.id });
+    const currentUser = await this.userModel.findOne({ _id: user.id }).populate("wishlist");
     if (!currentUser) {
       throw new NotFoundException('User not found');
     }

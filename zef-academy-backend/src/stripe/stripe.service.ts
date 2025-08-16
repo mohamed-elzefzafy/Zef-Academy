@@ -45,7 +45,7 @@ export class StripeService {
         {
           price_data: {
             currency: 'usd',
-            unit_amount: course.price * 100,
+            unit_amount: course.finalPrice * 100,
             product_data: {
               name: course.title,
               description: course.description,

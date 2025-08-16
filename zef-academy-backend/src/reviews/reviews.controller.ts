@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -17,6 +18,7 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CurrentUser } from 'src/auth/decorator/current-user.decorator';
 import { JwtPayloadType } from 'src/shared/types';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
+import { PAGE_LIMIT_ADMIN } from 'src/shared/constants';
 
 @Controller('v1/reviews')
 export class ReviewsController {
@@ -37,12 +39,22 @@ export class ReviewsController {
     return this.reviewsService.findAll(courseId);
   }
 
-  @Get()
-  @Roles([UserRoles.ADMIN])
-  @UseGuards(AuthGuard)
-  findAllAdmin() {
-    return this.reviewsService.findAllAdmin();
-  }
+  // @Get()
+  // @Roles([UserRoles.ADMIN])
+  // @UseGuards(AuthGuard)
+  // findAllAdmin() {
+  //   return this.reviewsService.findAllAdmin();
+  // }
+
+    @Get("admin-find-all-reviews")
+    @Roles([UserRoles.ADMIN])
+    @UseGuards(AuthGuard)
+    findAllAdmin(
+      @Query('page') page: string = '1',
+      @Query('limit') limit: string = `${PAGE_LIMIT_ADMIN}`,
+    ) {
+      return this.reviewsService.findAllAdmin(+page, +limit);
+    }
 
   @Get(':id')
   findOne(@Param('id', ParseObjectIdPipe) id: string) {
@@ -68,7 +80,7 @@ export class ReviewsController {
   }
 
     @Delete('admin-instructor-remove/:id')
-  @Roles([UserRoles.INSTRUCTOR, UserRoles.ADMIN])
+  @Roles([ UserRoles.ADMIN])
   @UseGuards(AuthGuard)
   removeAdminAndInstructor(@Param('id') id: string, @CurrentUser() user: JwtPayloadType) {
     return this.reviewsService.removeAdminAndInstructor(id,user);

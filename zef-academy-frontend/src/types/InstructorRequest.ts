@@ -1,17 +1,16 @@
-// export interface ICurrentUserInstructorRequest {
-//   requestStatueTitle: string;
-//   image : CloudinaryObject;
-
-// }
-// export interface IAddCategory {
-//   title: string;
-//   image : CloudinaryObject;
-// }
+import { IUserInfo } from "./auth";
+import { Pagination } from "./course";
 
 export interface ICurrentUserInstructorRequest {
   _id: string;
   requestStatueTitle: string;
   createdAt: string;
   updatedAt: string;
-  user: string;
+  user: IUserInfo;
+}
+
+
+export interface IInstructorRequestResponse {
+  instructorRequest: ICurrentUserInstructorRequest[];
+  pagination: Pagination;
 }

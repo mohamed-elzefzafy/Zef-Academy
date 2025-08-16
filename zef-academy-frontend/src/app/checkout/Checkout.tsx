@@ -16,7 +16,7 @@ await stripe?.redirectToCheckout({ sessionId: session.id });
 }
 
   return (
-    <Button variant="contained" sx={{ maxWidth: "25%" }} onClick={handleCheckout}>
+    <Button variant="text" sx={{ maxWidth: "25%", textTransform : "capitalize" }} onClick={handleCheckout}>
       Buy Now
     </Button>
   );

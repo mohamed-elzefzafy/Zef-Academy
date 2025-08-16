@@ -32,11 +32,10 @@ function Header() {
   const [logout] = useLogoutMutation();
   const { userInfo } = useAppSelector((state) => state?.auth);
   const [createInstructorRequest] = useCreateInstructorRequestMutation();
-  const { data: currentUserInstructorRequest , refetch} =
+  const { data: currentUserInstructorRequest, refetch } =
     useGetCurrentUserInstructorRequestQuery();
-  
-    
-    const [accessResultStatu] = useAccessResultStatuMutation();
+
+  const [accessResultStatu] = useAccessResultStatuMutation();
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -77,11 +76,12 @@ function Header() {
     }
   };
 
-  const handleaccessResultStatu = async()=>{
-        try {
-    const currentUser =  await accessResultStatu(currentUserInstructorRequest?._id).unwrap();
-    console.log(currentUser);
-    
+  const handleaccessResultStatu = async () => {
+    try {
+      const currentUser = await accessResultStatu(
+        currentUserInstructorRequest?._id
+      ).unwrap();
+      console.log(currentUser);
 
       toast.success("you became instructor");
       dispatch(setCredentials({ ...currentUser }));
@@ -91,7 +91,7 @@ function Header() {
     } catch (error) {
       toast.error((error as { data: { message: string } })?.data?.message);
     }
-  }
+  };
   return (
     <AppBar position="fixed">
       <Container maxWidth="xl">
@@ -257,14 +257,13 @@ function Header() {
                     </MenuItem>
                   )}
 
-
-                      {userInfo.role === "instructor" && (
+                  {userInfo.role === "instructor" && (
                     <MenuItem
                       onClick={handleCloseUserMenu}
                       disabled={!userInfo.isAccountVerified}
                     >
                       <Typography
-                        href={"/admin-dashboard"}
+                        href={"/instructor-dashboard"}
                         sx={{
                           textAlign: "center",
                           fontSize: { xs: "0.875rem", sm: "1rem" },
@@ -276,15 +275,13 @@ function Header() {
                     </MenuItem>
                   )}
 
-
                   <MenuItem
                     onClick={handleCloseUserMenu}
                     disabled={!userInfo.isAccountVerified}
-                      href={`/profile/${userInfo?._id}`}
-                      component={Link}
+                    href={`/profile/${userInfo?._id}`}
+                    component={Link}
                   >
                     <Typography
-                    
                       sx={{
                         textAlign: "center",
                         fontSize: { xs: "0.875rem", sm: "1rem" },
@@ -318,11 +315,47 @@ function Header() {
                       </MenuItem>
                     )}
 
-                        {(userInfo.role === "user" && currentUserInstructorRequest?.requestStatueTitle === "sent") && (
+                  {userInfo.role === "user" &&
+                    currentUserInstructorRequest?.requestStatueTitle ===
+                      "sent" && (
+                      <MenuItem onClick={handleCloseUserMenu} disabled>
+                        <Typography
+                          sx={{
+                            textAlign: "center",
+                            fontSize: { xs: "0.875rem", sm: "1rem" },
+                            textDecoration: "none",
+                            color: "inherit",
+                          }}
+                        >
+                          Instructor request sent
+                        </Typography>
+                      </MenuItem>
+                    )}
+
+                  {userInfo.role === "user" &&
+                    currentUserInstructorRequest?.requestStatueTitle ===
+                      "reject" && (
+                      <MenuItem onClick={handleCloseUserMenu} disabled>
+                        <Typography
+                          sx={{
+                            textAlign: "center",
+                            fontSize: { xs: "0.875rem", sm: "1rem" },
+                            textDecoration: "none",
+                            color: "inherit",
+                          }}
+                        >
+                          Instructor request rejected
+                        </Typography>
+                      </MenuItem>
+                    )}
+
+                    
+                  {(userInfo.role === "user" ||
+                    userInfo.role === "instructor") && (
                       <MenuItem
                         onClick={handleCloseUserMenu}
-                        disabled
-
+                        href={`/my-learning`}
+                        component={Link}
                       >
                         <Typography
                           sx={{
@@ -332,16 +365,18 @@ function Header() {
                             color: "inherit",
                           }}
                         >
-                      Instructor request sent
+                          My Learning
                         </Typography>
                       </MenuItem>
                     )}
 
-                                    {(userInfo.role === "user" && currentUserInstructorRequest?.requestStatueTitle === "reject") && (
+
+                  {(userInfo.role === "user" ||
+                    userInfo.role === "instructor") && (
                       <MenuItem
                         onClick={handleCloseUserMenu}
-                        disabled
-
+                        href={`/my-wishlist`}
+                        component={Link}
                       >
                         <Typography
                           sx={{
@@ -351,15 +386,15 @@ function Header() {
                             color: "inherit",
                           }}
                         >
-                      Instructor request rejected
+                          My Wishlist
                         </Typography>
                       </MenuItem>
                     )}
 
-                                              {(userInfo.role === "user" && currentUserInstructorRequest?.requestStatueTitle === "accept") && (
-                      <MenuItem
-                        onClick={handleCloseUserMenu}
-                      >
+                  {userInfo.role === "user" &&
+                    currentUserInstructorRequest?.requestStatueTitle ===
+                      "accept" && (
+                      <MenuItem onClick={handleCloseUserMenu}>
                         <Typography
                           onClick={handleaccessResultStatu}
                           sx={{
@@ -369,11 +404,10 @@ function Header() {
                             color: "inherit",
                           }}
                         >
-                    click here to be Instructor 
+                          click here to be Instructor
                         </Typography>
                       </MenuItem>
                     )}
-
 
                   <MenuItem onClick={handleLogout}>
                     <Typography

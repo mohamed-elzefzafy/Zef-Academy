@@ -68,6 +68,7 @@ export class UsersService {
       .sort({ role: 1, createdAt: 1 }) // ASC sorting
       .skip(skip)
       .limit(limitNumber)
+      .populate("users")
       .exec();
 
   const total = await this.userModel.countDocuments().exec();
@@ -90,7 +91,7 @@ export class UsersService {
 
 
   public async findOne(id: string) {
-    const user = await this.userModel.findById( id );
+    const user = await this.userModel.findById( id ).populate("wishlist");;
     if (!user) {
       throw new NotFoundException(`User with id (${id}) not found`);
     }

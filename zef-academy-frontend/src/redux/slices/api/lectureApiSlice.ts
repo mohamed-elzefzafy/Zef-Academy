@@ -3,6 +3,14 @@ import { apiSlice } from "./apiSlice";
 
 export const lectureApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
+    createLecture: builder.mutation({
+      query: (data) => ({
+        url: `/api/v1/lecture`,
+        method: "POST",
+        body: data,
+      }),
+    }),
+
     getLectures: builder.query<ILectureResponse, string>({
       query: (courseId) => ({
         url: `/api/v1/lecture/lectures-course/${courseId}`,
@@ -11,87 +19,124 @@ export const lectureApiSlice = apiSlice.injectEndpoints({
       providesTags: ["Lecture"],
     }),
 
-    // updateCategory: builder.mutation({
-    //   query: ({ payLoad, categoryId }) => ({
-    //     url: `/api/v1/category/${categoryId}`,
-    //     headers: {
-    //       "Cache-Control": "no-store", // Prevent caching
-    //     },
-    //     method: "PATCH",
-    //     body: payLoad,
-    //   }),
-    // }),
+    getInstructorCoursesLectures: builder.query<
+      ILectureResponse,
+      number | void
+    >({
+      query: (page) => ({
+        url: `/api/v1/lecture/my-lectures-courses?page=${page}`,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }),
+      keepUnusedDataFor: 1,
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.lectures.map(({ _id }) => ({
+                type: "Lecture" as const,
+                _id,
+              })),
+              { type: "Lecture", _id: "LIST" },
+            ]
+          : [{ type: "Lecture", _id: "LIST" }],
+    }),
 
-    // getOneCategory: builder.query<ICategory, string | void>({
-    //   query: (id) => ({
-    //     url: `/api/v1/category/${id}`,
-    //   }),
-    //   keepUnusedDataFor: 5,
-    //   providesTags: ["Category"],
-    // }),
+    deleteLecturesInstructorPage: builder.mutation<
+      void,
+      { _id: string; page?: number }
+    >({
+      query: ({ _id }) => ({
+        url: `/api/v1/lecture/${_id}`,
+        method: "DELETE",
+      }),
+      async onQueryStarted({ _id, page }, { dispatch, queryFulfilled }) {
+        const queryParams = `?page=${page}`;
+        const patchResult = dispatch(
+          lectureApiSlice.util.updateQueryData(
+            "getLectures",
+            queryParams,
+            (draft: ILectureResponse) => {
+              draft.lectures = draft.lectures.filter(
+                (lecture) => lecture._id !== _id
+              );
+              draft.pagination.total -= 1;
+              if (draft.lectures.length === 0 && page && page > 1) {
+                draft.pagination.page = page - 1;
+              }
+            }
+          )
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+      invalidatesTags: (result, error, { _id }) => [{ type: "Lecture", _id }],
+    }),
 
-    // createCategory: builder.mutation({
-    //   query: (data) => ({
-    //     url: `/api/v1/category`,
-    //     method: "POST",
-    //     body: data,
-    //   }),
-    // }),
+    updateLecturePosition: builder.mutation({
+      query: ({ payLoad, lectureId }) => ({
+        url: `/api/v1/lecture/update-position/${lectureId}`,
+        method: "PATCH",
+        body: payLoad,
+      }),
+      invalidatesTags: ["Lecture"],
+    }),
 
-    // getCategoriesAdmin: builder.query<ICategoryResponse, string | void>({
-    //   query: (queries = "") => ({
-    //     url: `/api/v1/category${queries}&_t=${Date.now()}`,
-    //     headers: {
-    //       "Cache-Control": "no-store",
-    //     },
-    //   }),
-    //   keepUnusedDataFor: 1,
-    //   providesTags: (result) =>
-    //     result
-    //       ? [
-    //           ...result.categories.map(({ _id }) => ({
-    //             type: "Category" as const,
-    //             _id,
-    //           })),
-    //           { type: "Category", id: "LIST" },
-    //         ]
-    //       : [{ type: "Category", id: "LIST" }],
-    // }),
+    updateLecture: builder.mutation({
+      query: ({ payLoad, lectureId }) => ({
+        url: `/api/v1/lecture/${lectureId}`,
+        headers: {
+          "Cache-Control": "no-store", // Prevent caching
+        },
+        method: "PATCH",
+        body: payLoad,
+      }),
+    }),
 
-    // deleteCategoryAdminPage: builder.mutation<
-    //   void,
-    //   { _id: string; page?: number }
-    // >({
-    //   query: ({ _id }) => ({
-    //     url: `/api/v1/category/${_id}`,
-    //     method: "DELETE",
-    //   }),
-    //   async onQueryStarted({ _id, page }, { dispatch, queryFulfilled }) {
-    //     const queryParams = `?page=${page}`;
-    //     const patchResult = dispatch(
-    //       categoryApiSlice.util.updateQueryData(
-    //         "getCategoriesAdmin",
-    //         queryParams,
-    //         (draft: ICategoryResponse) => {
-    //           draft.categories = draft.categories.filter(
-    //             (category) => category._id !== _id
-    //           );
-    //           draft.pagination.total -= 1;
-    //           if (draft.categories.length === 0 && page && page > 1) {
-    //             draft.pagination.page = page - 1;
-    //           }
-    //         }
-    //       )
-    //     );
-    //     try {
-    //       await queryFulfilled;
-    //     } catch {
-    //       patchResult.undo();
-    //     }
-    //   },
-    //   invalidatesTags: (result, error, { _id }) => [{ type: "Category", _id }],
-    // }),
+    addLectureAttachments: builder.mutation({
+      query: ({ payLoad, lectureId }) => ({
+        url: `/api/v1/lecture/attachments/${lectureId}`,
+        headers: {
+          "Cache-Control": "no-store", // Prevent caching
+        },
+        method: "PATCH",
+        body: payLoad,
+      }),
+    }),
+
+    removeLectureAttachments: builder.mutation({
+      query: ({ lectureId, publicId }) => ({
+        url: `/api/v1/lecture/attachments/${lectureId}?publicId=${publicId}`,
+        headers: {
+          "Cache-Control": "no-store", // Prevent caching
+        },
+        method: "DELETE",
+      }),
+    }),
+
+    removeLecture: builder.mutation({
+      query: (lectureId) => ({
+        url: `/api/v1/lecture/${lectureId}`,
+        headers: {
+          "Cache-Control": "no-store", // Prevent caching
+        },
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
-export const {useGetLecturesQuery} = lectureApiSlice;
+export const {
+  useGetLecturesQuery,
+  useUpdateLecturePositionMutation,
+  useCreateLectureMutation,
+  useAddLectureAttachmentsMutation,
+  useRemoveLectureAttachmentsMutation,
+  useUpdateLectureMutation,
+  useRemoveLectureMutation,
+  useGetInstructorCoursesLecturesQuery,
+  useDeleteLecturesInstructorPageMutation,
+} = lectureApiSlice;

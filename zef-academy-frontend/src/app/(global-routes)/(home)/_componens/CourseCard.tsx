@@ -1,6 +1,5 @@
 "use client";
 import Grid from "@mui/material/Grid";
-import { useAppSelector } from "@/redux/hooks";
 import {
   Card,
   CardMedia,
@@ -14,6 +13,16 @@ import { blue } from "@mui/material/colors";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ICourse } from "@/types/course";
+import { Favorite, FavoriteBorder } from "@mui/icons-material";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { useGetOneUserQuery } from "@/redux/slices/api/authApiSlice";
+import {
+  useAddCourseToWishlistMutation,
+  useRemoveCourseFromWishlistMutation,
+} from "@/redux/slices/api/wislistApiSlice";
+import toast from "react-hot-toast";
+import { setCredentials } from "@/redux/slices/authSlice";
+import { IUserInfo } from "@/types/auth";
 
 interface CourseCardProps {
   course: ICourse;
@@ -22,6 +31,7 @@ interface CourseCardProps {
   search?: string;
   category?: string;
   userId?: string;
+  users?: IUserInfo[];
   deleteCourse: (args: {
     _id: string;
     page?: number;
@@ -31,15 +41,26 @@ interface CourseCardProps {
   }) => void;
 }
 export default function CourseCard({
-  course: { title , description, thumbnail, category: courseCategory, _id, instructor },
-  page,
-  search,
-  category,
-  userId,
-  deleteCourse,
+  course: {
+    title,
+    description,
+    thumbnail,
+    category: courseCategory,
+    _id,
+    instructor,
+    users,
+  },
+  refetchCourses,
 }: CourseCardProps) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { userInfo } = useAppSelector((state) => state.auth);
+
+  const { data: user, refetch } = useGetOneUserQuery(userInfo._id);
+  const [addCourseToWishlist] = useAddCourseToWishlistMutation();
+  const [removeCourseFromWishlist] = useRemoveCourseFromWishlistMutation();
+
+  console.log(users);
 
   // const onDeleteCourse = async () => {
   //   try {
@@ -70,7 +91,35 @@ export default function CourseCard({
   //   }
   // };
 
+  const handleAddCourseToWishlist = async () => {
+    try {
+      const user = await addCourseToWishlist({ course: _id }).unwrap();
+      router.refresh();
+      dispatch(setCredentials({ ...user }));
+      refetch();
+    } catch (error) {
+      console.error("add course to wishlist error:", error);
+      const errorMessage =
+        (error as { data?: { message?: string } }).data?.message ||
+        "Failed to add course to wishlist";
+      toast.error(errorMessage);
+    }
+  };
 
+  const handleRemoveCourseFromWishlist = async () => {
+    try {
+    const user =  await removeCourseFromWishlist(_id).unwrap();
+      router.refresh();
+      dispatch(setCredentials({ ...user }));
+      refetch();
+    } catch (error) {
+      console.error("remove course from wishlist error:", error);
+      const errorMessage =
+        (error as { data?: { message?: string } }).data?.message ||
+        "Failed to remove course from wishlist";
+      toast.error(errorMessage);
+    }
+  };
   return (
     <Grid size={{ xs: 12, lg: 6 }}>
       <Card
@@ -79,7 +128,7 @@ export default function CourseCard({
           flexDirection: { xs: "column", sm: "row" },
           maxWidth: { xs: "100%", sm: 600, md: 700, lg: 500 },
           width: "100%",
-          height: { xs: 350, sm: 300 },
+          height: { xs: 420, sm: 280 },
           wordBreak: "break-word",
           m: { xs: 0, sm: 1 },
           boxShadow: 3,
@@ -147,7 +196,7 @@ export default function CourseCard({
                 fontSize: { xs: "0.75rem", sm: "0.875rem" },
               }}
             >
-            category : {courseCategory.title}
+              category : {courseCategory.title}
             </Typography>
             <Typography
               variant="body2"
@@ -178,7 +227,7 @@ export default function CourseCard({
             sx={{
               flexWrap: "wrap",
               gap: 1,
-              justifyContent: { xs: "center", sm: "flex-start" },
+              justifyContent: { xs: "center", sm: "space-between" },
             }}
           >
             <Button
@@ -190,17 +239,45 @@ export default function CourseCard({
             >
               read-more
             </Button>
-            {/* {(userInfo._id === instructor._id || userInfo.role === "admin") && (
-              <Button
-                size="small"
-                variant="outlined"
-                color="error"
-                onClick={onDeleteCourse}
-                sx={{ textTransform: "capitalize", fontWeight: "bold" }}
-              >
-                delete-post
-              </Button>
-            )} */}
+
+            {(userInfo.role === "user" || userInfo.role === "instructor") &&
+              user?._id !== instructor._id &&
+             !users.some((u) => String(u) === String(userInfo?._id)) && (
+                <Button>
+                  {" "}
+                  {user?.wishlist.find((w) => w._id === _id) ? (
+                    <Favorite
+                      sx={{ color: "red" }}
+                      onClick={handleRemoveCourseFromWishlist}
+                    />
+                  ) : (
+                    <FavoriteBorder
+                      sx={{ color: "red" }}
+                      onClick={handleAddCourseToWishlist}
+                    />
+                  )}{" "}
+                </Button>
+              )}
+{/* 
+              {(userInfo?.role === "user" || userInfo?.role === "instructor") &&
+ user?._id !== instructor?._id &&
+ Array.isArray(users) &&
+ users.length > 0 &&
+ !users.some((u) => String(u._id) === String(userInfo?._id)) && (
+   <Button>
+     {user?.wishlist?.some((w) => String(w._id) === String(_id)) ? (
+       <Favorite
+         sx={{ color: "red" }}
+         onClick={handleRemoveCourseFromWishlist}
+       />
+     ) : (
+       <FavoriteBorder
+         sx={{ color: "red" }}
+         onClick={handleAddCourseToWishlist}
+       />
+     )}
+   </Button>
+)} */}
           </CardActions>
         </Box>
       </Card>

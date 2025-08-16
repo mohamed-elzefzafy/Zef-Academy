@@ -26,11 +26,11 @@ export class Course {
   @Prop({ type: Number, min: 0 })
   price: number;
 
-  @Prop({ type: Number, min: 0 ,default : 0})
+  @Prop({ type: Number, min: 0, default: 0 })
   discount: number;
 
-    @Prop({ type: Number, min: 0 })
-  priceAfterDiscount: number;
+  @Prop({ type: Number, min: 0 })
+  finalPrice: number;
 
   @Prop({ type: Boolean, default: false })
   isPublished: boolean;
@@ -45,15 +45,14 @@ export class Course {
   })
   category: string;
 
-    @Prop({ type: Number, min : 0 ,max: 5 })
+  @Prop({ type: Number, min: 0, max: 5 })
   rating: number;
 
-    @Prop({ type: Number , default : 0})
+  @Prop({ type: Number, default: 0 })
   reviewsNumber: number;
 
-      @Prop({ type: String , default : "00:00"})
+  @Prop({ type: String, default: '00:00' })
   videosLength: string;
-
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
@@ -62,14 +61,12 @@ export class Course {
   })
   instructor: string;
 
-
-@Prop({
-  type: [mongoose.Schema.Types.ObjectId],
-  ref: User.name,
-  default: [],
-})
-users: string[];
-
+  @Prop({
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: User.name,
+    default: [],
+  })
+  users: string[];
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);

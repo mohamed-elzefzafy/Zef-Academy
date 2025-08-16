@@ -1,3 +1,5 @@
+import { ICourse } from "./course";
+
 export interface UserRegister {
     firstName: string,
     lastName: string,
@@ -32,6 +34,7 @@ export interface UserLogin {
     role: string;
     createdAt: string;
     updatedAt: string;
+    wishlist : ICourse[]
   }
 
   export type CloudinaryObject = {

@@ -1,7 +1,17 @@
 "use client";
 import { useUpdatePasswordMutation } from "@/redux/slices/api/authApiSlice";
-import { Button, Stack, TextField, Typography } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  Button,
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
@@ -14,17 +24,31 @@ interface IUpdatePassord {
 const UpdatePassord = () => {
   const router = useRouter();
   const [updatePassword] = useUpdatePasswordMutation();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { isValid, isSubmitting, errors },
-  } = useForm<IUpdatePassord>();
+  } = useForm<IUpdatePassord & { confirmPassword: string }>();
 
-  const onSubmit = async (values: IUpdatePassord) => {
+  const onSubmit = async (
+    values: IUpdatePassord & { confirmPassword: string }
+  ) => {
+        if (values.newPassword !== values.confirmPassword) {
+          toast.error("Passwords do not match");
+          return;
+        }
+    
     try {
-      const { user } = await updatePassword(values).unwrap();
+      const { user } = await updatePassword({
+  email: values.email,
+  verificationCode: values.verificationCode,
+  newPassword: values.newPassword,
+}).unwrap();
       toast.success("you reset your password please login");
       router.push(`/auth/login?userNameFromUpdatePassword=${user?.firstName}`);
       reset();
@@ -75,24 +99,74 @@ const UpdatePassord = () => {
       />
 
       <TextField
-        type="password"
-        placeholder="Password"
-        label="Password"
+        type={showPassword ? "text" : "password"}
+        placeholder="password"
+        label="password"
         sx={{ width: "100%" }}
         {...register("newPassword", { required: "password is required" })}
-        error={errors.newPassword ? true : false}
-        helperText={errors.newPassword && "password is required"}
+        error={!!errors.newPassword}
+        helperText={errors.newPassword?.message}
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  edge="end"
+                >
+                  {showPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          },
+        }}
       />
 
-      <Button
-        type="submit"
-        variant="contained"
-        color="primary"
-        sx={{ mt: 2, textTransform: "capitalize", width: "100%" }}
-        disabled={isSubmitting || !isValid}
-      >
-        Update Passord
-      </Button>
+      {/* Confirm Password field with Eye icon */}
+      <TextField
+        type={showConfirmPassword ? "text" : "password"}
+        placeholder="confirm-password"
+        label="confirm-password"
+        sx={{ width: "100%" }}
+        {...register("confirmPassword", {
+          required: "Confirm password is required",
+          validate: (value) =>
+            value === watch("newPassword") || "Passwords do not match",
+        })}
+        error={!!errors.confirmPassword}
+        helperText={errors.confirmPassword?.message}
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  edge="end"
+                >
+                  {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
+
+  
+
+
+          <Button
+                              type="submit"
+                              variant="contained"
+                              fullWidth
+                                disabled={isSubmitting || !isValid}
+                              sx={{ textTransform: "capitalize", position: "relative" }}
+                            >
+                              {isSubmitting ? (
+                                <CircularProgress size={24} sx={{ color: "white" }} />
+                              ) : (
+                              "update-password"
+                              )}
+                            </Button>
     </Stack>
   );
 };

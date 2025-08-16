@@ -69,7 +69,7 @@ const EnterVerifyCode = () => {
             <Typography sx={{ color: lightBlue[700] }}>
               {userNameQuery}
             </Typography>{" "}
-            for-registering-please-verify-your-email
+          for registering, please verify your email
           </Typography>
         </Box>
       )}

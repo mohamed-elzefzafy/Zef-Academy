@@ -1,5 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsMongoId,
   IsNotEmpty,
   IsNumber,
@@ -17,7 +18,7 @@ export class CreateCourseDto {
   @IsString()
   description: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   @Type(() => Number)
   price: number;
@@ -31,4 +32,9 @@ export class CreateCourseDto {
   @IsNotEmpty()
   @IsMongoId({ message: 'Category must be a valid MongoDB ObjectId' })
   category: string;
+
+  @IsOptional()
+    @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  isFree: boolean;
 }

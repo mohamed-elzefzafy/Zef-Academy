@@ -3,26 +3,29 @@ import { ChangeEvent } from "react";
 import { ICourse, Pagination } from "@/types/course";
 import PaginationComponent from "@/app/components/PaginationComponent";
 import CourseCard from "./CourseCard";
+import Loading from "@/app/loading";
 
 const CoursesComponent = ({
   courses,
   pagination,
-  refetchPosts,
+  refetchCourses,
   setCurrentPage,
   page,
   search,
   category,
   userId,
   deleteCourse,
+loadingCourse
 }: {
   courses: ICourse[];
   pagination: Pagination;
-  refetchPosts: () => void;
+  refetchCourses: () => void;
   setCurrentPage: (page: number) => void;
   page: number;
   search?: string;
   category?: string;
   userId?: string;
+      loadingCourse :boolean,
   deleteCourse: (args: {
     _id: string;
     page?: number;
@@ -34,6 +37,10 @@ const CoursesComponent = ({
   const handlePageChange = (e: ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page);
   };
+
+  if (loadingCourse) {
+    return <Loading/>
+  }
 
   return (
     <>
@@ -49,12 +56,13 @@ const CoursesComponent = ({
           <CourseCard
             key={course._id}
             course={course}
-            refetchCourses={refetchPosts}
+            refetchCourses={refetchCourses}
             page={page}
             search={search}
             category={category}
             userId={userId}
             deleteCourse={deleteCourse}
+            users={course.users}
           />
         ))}
       </Grid>

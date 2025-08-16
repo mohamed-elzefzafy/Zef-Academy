@@ -10,12 +10,13 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Course } from './entities/course.chema';
-import { Model, Types } from 'mongoose';
+import { isValidObjectId, Model, Types } from 'mongoose';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { CategoryService } from 'src/category/category.service';
 import { JwtPayloadType } from 'src/shared/types';
 import { LectureService } from 'src/lecture/lecture.service';
 import { UserRoles } from 'src/shared/enums/roles.enum';
+import { UpdateCourseToNotFreeDto } from './dto/updateCourseToNotFree.dto';
 
 @Injectable()
 export class CourseService {
@@ -35,36 +36,76 @@ export class CourseService {
     const course = await this.courseModel.findOne({
       title: createCourseDto.title,
     });
-    if (course) {
-      throw new BadRequestException(
-        `Course with title ${createCourseDto.title} already exists`,
-      );
-    }
 
-    if (createCourseDto.price - createCourseDto.discount < 10) {
-      throw new BadRequestException(
-        'the price after discount must be more than 10',
-      );
-    }
+    if (createCourseDto.isFree) {
+      if (course) {
+        throw new BadRequestException(
+          `Course with title ${createCourseDto.title} already exists`,
+        );
+      }
 
-    await this.categoryService.findOne(createCourseDto.category);
-    if (!file) {
-      throw new BadRequestException('Thumbnail is required');
-    }
+      createCourseDto.price = 0;
+      createCourseDto.discount = 0;
 
-    const result = await this.cloudinaryService.uploadImage(file, 'courses');
-    const thumbnail = {
-      url: result.secure_url,
-      public_id: result.public_id,
-    };
-    createCourseDto.discount = createCourseDto.discount || 0;
-    const newCourse = this.courseModel.create({
-      ...createCourseDto,
-      thumbnail,
-      instructor: user.id,
-      priceAfterDiscount: +createCourseDto.price - +createCourseDto.discount,
-    });
-    return newCourse;
+      await this.categoryService.findOne(createCourseDto.category);
+      if (!file) {
+        throw new BadRequestException('Thumbnail is required');
+      }
+
+      const result = await this.cloudinaryService.uploadImage(file, 'courses');
+      const thumbnail = {
+        url: result.secure_url,
+        public_id: result.public_id,
+      };
+
+      const newCourse = await this.courseModel.create({
+        ...createCourseDto,
+        thumbnail,
+        instructor: user.id,
+        finalPrice: 0,
+        isFree: true,
+      });
+
+      await newCourse.save();
+      return newCourse;
+    } else {
+      if (course) {
+        throw new BadRequestException(
+          `Course with title ${createCourseDto.title} already exists`,
+        );
+      }
+
+      if (createCourseDto.price - createCourseDto.discount < 10) {
+        throw new BadRequestException(
+          'the price after discount must be more than 10',
+        );
+      }
+
+      await this.categoryService.findOne(createCourseDto.category);
+      if (!file) {
+        throw new BadRequestException('Thumbnail is required');
+      }
+
+      const result = await this.cloudinaryService.uploadImage(file, 'courses');
+      const thumbnail = {
+        url: result.secure_url,
+        public_id: result.public_id,
+      };
+      createCourseDto.discount = createCourseDto.discount || 0;
+      const newCourse = await this.courseModel.create({
+        ...createCourseDto,
+        thumbnail,
+        instructor: user.id,
+        isFree: false,
+        finalPrice: +createCourseDto.price - +createCourseDto.discount,
+      });
+      if (newCourse.finalPrice === 0) {
+        newCourse.isFree = true;
+      }
+
+      await newCourse.save();
+      return newCourse;
+    }
   }
 
   // public async findAll(page: number, limit: number, category?: string , user? :string) {
@@ -128,8 +169,8 @@ export class CourseService {
     const filter: any = {};
 
     if (category) filter.category = category;
-    if (user) filter.instructor = user;
-    filter.isPublished = true; 
+    if (user && isValidObjectId(user)) filter.instructor = user;
+    filter.isPublished = true;
 
     if (search) {
       filter.$or = [
@@ -165,6 +206,124 @@ export class CourseService {
     };
   }
 
+  public async findAllInstructorCourses(
+    page: number,
+    limit: number,
+    user?: string,
+  ) {
+    const pageNumber = Math.max(1, page);
+    const limitNumber = Math.max(1, limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Build filter object
+    const filter: any = {};
+
+    if (user) filter.instructor = user;
+
+    // Build query
+    const query = this.courseModel
+      .find(filter)
+      .populate('category')
+      .populate('instructor');
+
+    const courses = await query
+      .sort({ createdAt: -1 }) // or your custom sorting
+      .skip(skip)
+      .limit(limitNumber)
+      .exec();
+
+    const total = await this.courseModel.countDocuments(filter).exec();
+
+    const pagesCount = Math.ceil(total / limitNumber);
+
+    return {
+      courses,
+      pagination: {
+        total,
+        page: pageNumber,
+        limit: limitNumber,
+        pagesCount,
+      },
+    };
+  }
+
+    public async findAllAdminCourses(
+    page: number,
+    limit: number,
+  ) {
+    const pageNumber = Math.max(1, page);
+    const limitNumber = Math.max(1, limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Build filter object
+    const filter: any = {};
+
+
+    // Build query
+    const query = this.courseModel
+      .find(filter)
+      .populate('category')
+      .populate('instructor');
+
+    const courses = await query
+      .sort({ createdAt: -1 }) // or your custom sorting
+      .skip(skip)
+      .limit(limitNumber)
+      .exec();
+
+    const total = await this.courseModel.countDocuments(filter).exec();
+
+    const pagesCount = Math.ceil(total / limitNumber);
+
+    return {
+      courses,
+      pagination: {
+        total,
+        page: pageNumber,
+        limit: limitNumber,
+        pagesCount,
+      },
+    };
+  }
+
+async findUserCourses(userId: string, page: number, limit: number) {
+  const pageNumber = Math.max(1, page);
+  const limitNumber = Math.max(1, limit);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  // إجمالي عدد الكورسات
+  const total = await this.courseModel.countDocuments({ users: userId });
+
+  // الكورسات مع pagination
+  const courses = await this.courseModel
+    .find({ users: userId })
+    .populate('instructor', 'name email')
+    .populate('category', 'title')
+    .skip(skip)
+    .limit(limitNumber);
+
+  const pagesCount = Math.ceil(total / limitNumber);
+
+  return {
+    courses,
+    pagination: {
+      total,
+      page: pageNumber,
+      limit: limitNumber,
+      pagesCount,
+    },
+  };
+}
+
+
+  async findCoursesByInstructor(instructorId: string) {
+  return this.courseModel
+    .find({ instructor: instructorId })
+    .select('_id name')
+    .lean();
+}
+
+
   async findOne(id: string) {
     let course = await this.courseModel
       .findById(id)
@@ -177,13 +336,13 @@ export class CourseService {
 
     const lectures = await this.lectureService.getCourseLectures(id);
 
-        let courseVideosLength = 0;
+    let courseVideosLength = 0;
     for (let id = 0; id < lectures.length; id++) {
       courseVideosLength += lectures[id].videoUrl.originalDuration;
     }
 
-
-    course.videosLength = this.lectureService.getLectureVideoDuration(courseVideosLength);
+    course.videosLength =
+      this.lectureService.getLectureVideoDuration(courseVideosLength);
     await course.save();
 
     return course;
@@ -242,8 +401,13 @@ export class CourseService {
     }
 
     Object.assign(course, updateCourseDto);
-    course.priceAfterDiscount = course.price - course.discount;
+    course.finalPrice = course.price - course.discount;
     // Save to database
+    if (course.finalPrice === 0) {
+      course.isFree = true;
+    }
+
+    await course.save();
     return await course.save();
   }
   async remove(id: string, user: JwtPayloadType) {
@@ -296,8 +460,63 @@ export class CourseService {
     return course;
   }
 
-  async toggleCourseToFreeOrNot(id: string, user: JwtPayloadType) {
-    const course = await this.findOne(id);
+  async updateCourseToNotFree(
+    id: string,
+    user: JwtPayloadType,
+    updateCourseToNotFreeDto: UpdateCourseToNotFreeDto,
+  ) {
+    const course = await this.findOneWithoutpopulate(id);
+    if (
+      updateCourseToNotFreeDto.price - updateCourseToNotFreeDto.discount <
+      10
+    ) {
+      throw new BadRequestException(
+        'the price after discount must be more than 10',
+      );
+    }
+    if (course.instructor.toString() !== user.id.toString()) {
+      throw new UnauthorizedException(
+        'you are not allowed to access this route',
+      );
+    }
+
+    if (!course.isFree) {
+      throw new UnauthorizedException('the course is not free already');
+    }
+
+    const lectures = await this.lectureService.getCourseLectures(id);
+
+    course.isFree = false;
+    course.price = updateCourseToNotFreeDto.price;
+    course.discount = updateCourseToNotFreeDto.discount || 0;
+    course.finalPrice = +course.price - +course.discount;
+    for (let i = 0; i < lectures.length; i++) {
+      if (lectures[i].isFree) {
+        lectures[i].isFree = false;
+        await lectures[i].save();
+      }
+    }
+    const firstLecture = lectures[0];
+    firstLecture.isFree = true;
+    await firstLecture.save();
+    //  else {
+    //   course.isFree = true;
+    //   for (let i = 0; i < lectures.length; i++) {
+    //     if (!lectures[i].isFree) {
+    //       lectures[i].isFree = true;
+    //       await lectures[i].save();
+    //     }
+    //   }
+    //   course.price = 0;
+    //   course.discount = 0;
+    //   course.finalPrice = 0;
+    // }
+    await course.save();
+    return course;
+  }
+
+  async updateCourseToFree(id: string, user: JwtPayloadType) {
+    const course = await this.findOneWithoutpopulate(id);
 
     if (course.instructor.toString() !== user.id.toString()) {
       throw new UnauthorizedException(
@@ -308,22 +527,43 @@ export class CourseService {
     const lectures = await this.lectureService.getCourseLectures(id);
 
     if (course.isFree) {
-      course.isFree = false;
-      for (let i = 0; i < lectures.length; i++) {
-        if (lectures[i].isFree) {
-          lectures[i].isFree = false;
-          await lectures[i].save();
-        }
-      }
-    } else {
-      course.isFree = true;
-      for (let i = 0; i < lectures.length; i++) {
-        if (!lectures[i].isFree) {
-          lectures[i].isFree = true;
-          await lectures[i].save();
-        }
+      throw new UnauthorizedException('the course is free already');
+    }
+
+    course.isFree = true;
+    for (let i = 0; i < lectures.length; i++) {
+      if (!lectures[i].isFree) {
+        lectures[i].isFree = true;
+        await lectures[i].save();
       }
     }
+    course.price = 0;
+    course.discount = 0;
+    course.finalPrice = 0;
+
+    // if (course.isFree) {
+    //   course.isFree = false;
+    //   if (course.finalPrice === 0) {
+    //     th
+    //   }
+    //   for (let i = 0; i < lectures.length; i++) {
+    //     if (lectures[i].isFree) {
+    //       lectures[i].isFree = false;
+    //       await lectures[i].save();
+    //     }
+    //   }
+    // } else {
+    //   course.isFree = true;
+    //   for (let i = 0; i < lectures.length; i++) {
+    //     if (!lectures[i].isFree) {
+    //       lectures[i].isFree = true;
+    //       await lectures[i].save();
+    //     }
+    //   }
+    //   course.price = 0;
+    //   course.discount = 0;
+    //   course.finalPrice = 0;
+    // }
     await course.save();
     return course;
   }
@@ -340,9 +580,9 @@ export class CourseService {
         'you are not allowed to access this route',
       );
     }
-    if (courseDiscount === 0) {
+    if (courseDiscount === 0 && course.discount === 0) {
       throw new BadRequestException(
-        'the price after discount must be more than 10',
+        'the discount already exists with value 0',
       );
     }
 
@@ -352,7 +592,7 @@ export class CourseService {
       );
     }
     course.discount = courseDiscount;
-    course.priceAfterDiscount = +course.price - +course.discount;
+    course.finalPrice = +course.price - +course.discount;
     await course.save();
     return course;
   }
@@ -365,83 +605,43 @@ export class CourseService {
   async updateCheckOut(courseId: string, userId: string) {
     const course = await this.findOneWithoutpopulate(courseId);
 
+    // let subscriberUsers = course.users || [];
+    // subscriberUsers.push(userId);
 
-// let subscriberUsers = course.users || [];
-// subscriberUsers.push(userId);
+    //     subscriberUsers = [...new Set(subscriberUsers)]; // Remove duplicates
 
-//     subscriberUsers = [...new Set(subscriberUsers)]; // Remove duplicates
-      
-//     course.users = subscriberUsers;
-if (course.users.find(id => id.toString() === userId.toString()))  {
+    //     course.users = subscriberUsers;
+    if (course.users.find((id) => id.toString() === userId.toString())) {
       throw new BadRequestException(
         'the user is already subscribed to the course',
       );
-} else {
-    course.users.push(userId);
-    course.sold += 1;
-}
-    
+    } else {
+      course.users.push(userId);
+      course.sold += 1;
+    }
 
     await course.save();
     return course;
   }
 
-// async updateCheckOut(courseId: string, userId: string) {
-//   const course = await this.findOneWithoutpopulate(courseId);
+  getCoursesInstructor(instructorId: string) {
+    return this.courseModel.find({ instructor: instructorId });
+  }
 
-//   // const userObjectId = new Types.ObjectId(userId); 
-//   // if (course.users.includes(userObjectId.toString())) {
-//   //   return { message: `you already subscribed to ${course.title} course` };
-//   // }
-// const userObjectId = new Types.ObjectId(userId);
+//   async findUserCourses(userId: string) {
+//   const courses = await this.courseModel
+//     .find({ users: userId }) // هنا بيدور لو الـ userId موجود جوه الـ array
+//     .populate('instructor', 'name email') // ممكن تجيب بيانات الانستركتور
+//     .populate('category', 'title'); // وممكن تجيب بيانات الكاتيجوري
 
-// if (course.users.find((u) => u.toString() === userObjectId.toString())) {
-//   return { message: `you already subscribed to ${course.title} course` };
+//   return courses;
 // }
 
-//   const updatedCourse = await this.courseModel.findByIdAndUpdate(
-//     courseId,
-//     {
-//       $addToSet: { users: userId },
-//       $inc: { sold: 1 }
-//     },
-//     { new: true }
-//   );
+  getCoursesCount(instructorId: string) {
+    return this.courseModel.countDocuments({ instructor: instructorId });
+  }
 
-//   if (!updatedCourse) {
-//     throw new NotFoundException('Course not found');
-//   }
-
-//   return updatedCourse;
-// }
-
-
-// async updateCheckOut(courseId: string, userId: string) {
-//     try {
-//       // Validate courseId and userId
-//       if (!Types.ObjectId.isValid(courseId) || !Types.ObjectId.isValid(userId)) {
-//         throw new NotFoundException('Invalid courseId or userId');
-//       }
-
-//       // Atomically update the course: add userId to users array and increment sold
-//       const course = await this.courseModel.findOneAndUpdate(
-//         { _id: courseId, users: { $ne: userId } }, // Only update if userId is not in users
-//         {
-//           $addToSet: { users: userId }, // Add userId if not already present
-//           $inc: { sold: 1 }, // Increment sold count
-//         },
-//         { new: true } // Return the updated document
-//       );
-
-//       if (!course) {
-//         throw new NotFoundException('Course not found or user already subscribed');
-//       }
-
-//       console.log(`Updated course users for courseId: ${courseId}, users: ${course.users}`);
-//       return course;
-//     } catch (error) {
-//       console.error(`Error in updateCheckOut for courseId: ${courseId}, userId: ${userId}`, error);
-//       throw error;
-//     }
-//   }
+    getAdminCoursesCount() {
+    return this.courseModel.countDocuments();
+  }
 }

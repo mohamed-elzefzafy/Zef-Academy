@@ -20,5 +20,5 @@ export class CreateLectureDto {
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
-  position: number;
+  position: number | null;
 }

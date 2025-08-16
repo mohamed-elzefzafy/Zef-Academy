@@ -23,6 +23,66 @@ export const coursesApiSlice = apiSlice.injectEndpoints({
           : [{ type: "Course", _id: "LIST" }],
     }),
 
+    // getInstructorCourses: builder.query<ICourseResponse, number | void>({
+    //   query: (page) => ({
+    //     url: `/api/v1/course/instructor-courses?page=${page}`,
+    //     headers: {
+    //       "Cache-Control": "no-store",
+    //     },
+    //   }),
+    //   keepUnusedDataFor: 1,
+    //   providesTags: (result) =>
+    //     result
+    //       ? [
+    //           ...result.courses.map(({ _id }) => ({
+    //             type: "Course" as const,
+    //             _id,
+    //           })),
+    //           { type: "Course", _id: "LIST" },
+    //         ]
+    //       : [{ type: "Course", _id: "LIST" }],
+    // }),
+
+
+    getInstructorCourses: builder.query<ICourseResponse, { page?: number; limit?: number }>({
+  query: ({ page = 1, limit = 10 }) => ({
+    url: `/api/v1/course/instructor-courses?page=${page}&limit=${limit}`,
+    headers: {
+      "Cache-Control": "no-store",
+    },
+  }),
+  keepUnusedDataFor: 1,
+  providesTags: (result) =>
+    result
+      ? [
+          ...result.courses.map(({ _id }) => ({
+            type: "Course" as const,
+            _id,
+          })),
+          { type: "Course", _id: "LIST" },
+        ]
+      : [{ type: "Course", _id: "LIST" }],
+}),
+
+    getAdminDashboardCourses: builder.query<ICourseResponse, { page?: number; limit?: number }>({
+  query: ({ page = 1, limit = 10 }) => ({
+    url: `/api/v1/course/admin-courses?page=${page}&limit=${limit}`,
+    headers: {
+      "Cache-Control": "no-store",
+    },
+  }),
+  keepUnusedDataFor: 1,
+  providesTags: (result) =>
+    result
+      ? [
+          ...result.courses.map(({ _id }) => ({
+            type: "Course" as const,
+            _id,
+          })),
+          { type: "Course", _id: "LIST" },
+        ]
+      : [{ type: "Course", _id: "LIST" }],
+}),
     deleteCourseHomePage: builder.mutation<
       void,
       { _id: string; page?: number; search?: string; category?: string }
@@ -60,19 +120,14 @@ export const coursesApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: (result, error, { _id }) => [{ type: "Course", _id }],
     }),
 
-        deleteCourseProfilePage: builder.mutation<
-      void,
-      { _id: string; page?: number; userId :string }
->({
+
+        deleteCourseAdminInstructorPage: builder.mutation<void, { _id: string; page?: number }>({
       query: ({ _id }) => ({
         url: `/api/v1/course/${_id}`,
         method: "DELETE",
       }),
-      async onQueryStarted(
-        { _id, page, userId },
-        { dispatch, queryFulfilled }
-      ) {
-        const queryParams = `?page=${page}&user=${userId}`;
+      async onQueryStarted({ _id, page }, { dispatch, queryFulfilled }) {
+        const queryParams = `?page=${page}`;
         const patchResult = dispatch(
           coursesApiSlice.util.updateQueryData(
             "getCourses",
@@ -94,6 +149,7 @@ export const coursesApiSlice = apiSlice.injectEndpoints({
       },
       invalidatesTags: (result, error, { _id }) => [{ type: "Course", _id }],
     }),
+
 
     getPostsAdmin: builder.query<ICourseResponse, string | void>({
       query: (queries) => ({
@@ -133,9 +189,38 @@ export const coursesApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    updateCourseToNotFree: builder.mutation({
+      query: ({ payLoad, courseId }) => ({
+        url: `/api/v1/course/make-course-notFree/${courseId}`,
+        method: "PATCH",
+        body: payLoad,
+      }),
+    }),
+    updateCourseToFree: builder.mutation({
+      query: (courseId) => ({
+        url: `/api/v1/course/make-course-Free/${courseId}`,
+        method: "PATCH",
+      }),
+    }),
+
+        updateCourseToPublish: builder.mutation({
+      query: (courseId) => ({
+        url: `/api/v1/course/publish-course/${courseId}`,
+        method: "PATCH",
+      }),
+    }),
+
+    createCourseDiscount: builder.mutation({
+      query: ({ payLoad, courseId }) => ({
+        url: `/api/v1/course/create-discount/${courseId}`,
+        method: "PATCH",
+        body: payLoad,
+      }),
+    }),
+
     deleteCourse: builder.mutation({
-      query: (_id) => ({
-        url: `/api/v1/course/${_id}`,
+      query: (id) => ({
+        url: `/api/v1/course/${id}`,
         headers: {
           "Cache-Control": "no-store", // Prevent caching
         },
@@ -143,6 +228,15 @@ export const coursesApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Course"],
     }),
+
+        getMyLearningCourse: builder.query<ICourseResponse, void>({
+          query: () => ({
+            url: `/api/v1/course/get-my-subscribed-courses`,
+          }),
+          keepUnusedDataFor: 5,
+          providesTags: ["Course"],
+        }),
+    
 
     // deletePostAdminPage: builder.mutation<void, { _id: string; page?: number }>({
     //   query: ({ _id }) => ({
@@ -184,5 +278,12 @@ export const {
   useLazyGetCoursesQuery,
   useLazyGetOneCourseQuery,
   useUpdateCourseMutation,
-  useDeleteCourseProfilePageMutation,
+  useGetInstructorCoursesQuery,
+  useUpdateCourseToFreeMutation,
+  useUpdateCourseToNotFreeMutation,
+  useCreateCourseDiscountMutation,
+  useDeleteCourseAdminInstructorPageMutation,
+  useGetAdminDashboardCoursesQuery,
+  useUpdateCourseToPublishMutation,
+  useGetMyLearningCourseQuery,
 } = coursesApiSlice;

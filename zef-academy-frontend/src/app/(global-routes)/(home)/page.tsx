@@ -25,9 +25,11 @@ import {
   useDeleteCourseHomePageMutation,
   useGetCoursesQuery,
 } from "@/redux/slices/api/courseApiSlice";
+import CoursesComponent from "./_componens/CoursesComponent";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
+  paddingLeft : 0,
   borderRadius: theme.shape.borderRadius,
   backgroundColor: alpha(theme.palette.common.white, 0.15),
   "&:hover": {
@@ -36,7 +38,7 @@ const Search = styled("div")(({ theme }) => ({
   marginLeft: 0,
   width: "100%",
   [theme.breakpoints.up("sm")]: {
-    marginLeft: theme.spacing(1),
+    // marginLeft: theme.spacing(1),
     width: "auto",
     minWidth: "200px",
   },
@@ -53,6 +55,7 @@ const SearchIconWrapper = styled("div")(({ theme }) => ({
 }));
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  fontSize: "14px",
   color: "inherit",
   width: "100%",
   "& .MuiInputBase-input": {
@@ -60,6 +63,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create("width"),
     [theme.breakpoints.up("sm")]: {
+      fontSize: "16px",
       width: "12ch",
       "&:focus": {
         width: "20ch",
@@ -81,7 +85,7 @@ export default function Home() {
   const [deleteCourseHomePage] = useDeleteCourseHomePageMutation();
   const { userInfo } = useAppSelector((state) => state.auth);
 
-  const { data: coursesResponse, refetch } = useGetCoursesQuery(
+  const { data: coursesResponse, refetch , isLoading} = useGetCoursesQuery(
     `?search=${searchKeyWord || ""}&page=${currentPage}&category=${category}`
   );
 
@@ -95,6 +99,28 @@ export default function Home() {
   return (
     <Container>
       <Stack sx={{ px: { xs: 2, sm: 4, md: 6 }, py: 2 }}>
+                <SearchParamComponent returnPath="/admin-dashboard/categories" />
+        <Box
+          sx={{
+            width: "100%",
+            aspectRatio: "16/9",
+            overflow: "hidden",
+            "& img": {
+              objectFit: "cover",
+              width: "100%",
+              height: "100%",
+            },
+          }}
+        >
+          <Image
+            alt="hero"
+            src="/zef-acemy-hero.png"
+            width={1920}
+            height={1080}
+            quality={100}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </Box>
         <Grid
           container
           spacing={2}
@@ -102,6 +128,7 @@ export default function Home() {
             alignItems: "space-between",
             justifyContent: "center",
             mb: 2,
+            mt: 3,
             width: { xs: "100%", sm: "80%", md: "60%" },
           }}
         >
@@ -110,8 +137,9 @@ export default function Home() {
               sx={{
                 display: "flex",
                 gap: 1,
-                alignItems: "center",
-                justifyContent: "center",
+                alignItems: "flex-start",
+                justifyContent: "flex-start",
+                width: "100%",
               }}
             >
               <Search sx={{ border: "1px solid gray", flexGrow: 1 }}>
@@ -143,6 +171,7 @@ export default function Home() {
               </Button>
             </Box>
           </Grid>
+
           <Grid size={{ xs: 12 }}>
             <FormControl fullWidth>
               <InputLabel>category</InputLabel>
@@ -161,29 +190,8 @@ export default function Home() {
             </FormControl>
           </Grid>
         </Grid>
-        <SearchParamComponent returnPath="/admin-dashboard/categories" />
-        <Box
-          sx={{
-            width: "100%",
-            aspectRatio: "16/9",
-            overflow: "hidden",
-            "& img": {
-              objectFit: "cover",
-              width: "100%",
-              height: "100%",
-            },
-          }}
-        >
-          <Image
-            alt="hero"
-            src="/zef-acemy-hero.png"
-            width={1920}
-            height={1080}
-            quality={100}
-            style={{ width: "100%", height: "100%" }}
-          />
-        </Box>
-        {userInfo.email && (
+
+        {( userInfo.role === "instructor") && (
           <Box
             sx={{
               py: 2,
@@ -199,22 +207,23 @@ export default function Home() {
                 textTransform: "capitalize",
                 maxWidth: "250px",
               }}
-              onClick={() => router.push("/add-post")}
+              onClick={() => router.push("/add-course")}
             >
               add-Course
             </Button>
           </Box>
         )}
         {coursesResponse && (
-          <PostsComponent
+          <CoursesComponent
             courses={coursesResponse.courses}
             pagination={coursesResponse.pagination}
-            refetchPosts={refetch}
+            refetchCourses={refetch}
             setCurrentPage={setCurrentPage}
             page={currentPage}
             search={searchKeyWord}
             category={category}
             deleteCourse={deleteCourseHomePage}
+            loadingCourse={isLoading}
           />
         )}
       </Stack>

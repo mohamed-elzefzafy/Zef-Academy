@@ -1,46 +1,43 @@
 "use client";
-import { Box, Container, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Container,
+  IconButton,
+  Stack,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import Image from "next/image";
 import React, { use, useState } from "react";
-// import PostsComponent from "../../(home)/_componens/PostsComponent";
 import {
   useGetOneUserQuery,
   useLogoutMutation,
 } from "@/redux/slices/api/authApiSlice";
-// import {
-//   useDeletePostProfilePageMutation,
-//   useGetPostsQuery,
-// } from "@/redux/slices/api/postApiSlice";
-// import { IPost } from "@/types/post";
-import EditUserProfileButton from "./_components/EditUserProfileButton";
 import { useRouter } from "next/navigation";
-// import SearchParamComponent from "../../post/[postId]/_components/SearchParamComponent";
-import DeleteUserProfileButton from "./_components/DeleteUserProfileButton";
 import { useDeleteCurrentUserMutation } from "@/redux/slices/api/userApiSlice";
-import { useAppDispatch } from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logoutAction } from "@/redux/slices/authSlice";
 import toast from "react-hot-toast";
 import CoursesComponent from "../../(home)/_componens/CoursesComponent";
 import { ICourse } from "@/types/course";
 import {
-  useDeleteCourseProfilePageMutation,
+  useDeleteCourseAdminInstructorPageMutation,
   useGetCoursesQuery,
 } from "@/redux/slices/api/courseApiSlice";
 import swal from "sweetalert";
+import { Delete, Edit } from "@mui/icons-material";
+import Loading from "@/app/loading";
 
 const ProfilePage = ({ params }: { params: Promise<{ userId: string }> }) => {
   const router = useRouter();
   const resolvedParams = use(params);
-  const [deleteCourseProfilePage] = useDeleteCourseProfilePageMutation();
+  const [deleteCourseAdminInstructorPage] =
+    useDeleteCourseAdminInstructorPageMutation();
   const [deleteCurrentUser] = useDeleteCurrentUserMutation();
   const [logout] = useLogoutMutation();
   const dispatch = useAppDispatch();
+  const { userInfo } = useAppSelector((state) => state?.auth);
   const [currentPage, setCurrentPage] = useState(1);
-  // const {
-  //   data: courseResponse,
-  //   refetch,
-  //   isLoading: loadingCourse,
-  // } = useGetCoursesQuery(`?page=${currentPage}&user=${resolvedParams.userId}`);
 
   const {
     data: courseResponse,
@@ -53,7 +50,6 @@ const ProfilePage = ({ params }: { params: Promise<{ userId: string }> }) => {
 
   let filterdCourses;
   if (!loadingCourse) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     filterdCourses = courseResponse?.courses.filter(
       (course) => course.instructor._id === user?._id
     );
@@ -83,7 +79,9 @@ const ProfilePage = ({ params }: { params: Promise<{ userId: string }> }) => {
     }
   };
 
-  console.log(courseResponse);
+  if (!user) {
+    return <Loading />;
+  }
 
   return (
     <Container sx={{ alignItems: "center", justifyContent: "center" }}>
@@ -116,150 +114,186 @@ const ProfilePage = ({ params }: { params: Promise<{ userId: string }> }) => {
           <Box sx={{ my: 5 }}></Box>
         )}
 
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            alignItems: { md: "center" },
-            justifyContent: { md: "center" },
-          }}
-        >
-          <Typography
+        <Stack>
+          <Box
             sx={{
-              marginTop: 1,
-              fontSize: { xs: "16px", md: "20px" },
-              mr: { md: "20px" },
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "flex-start", sm: "center" },
+              justifyContent: { xs: "flex-start", sm: "center" },
+              width: "100%",
+              gap: { xs: 1, md: 2 },
+              mt: 2,
             }}
           >
             <Typography
-              component="span"
               sx={{
                 fontSize: { xs: "16px", md: "20px" },
-                fontWeight: "bold",
-                color: "primary.main",
               }}
             >
-              name :
-            </Typography>{" "}
-            {user?.firstName + " " + user?.lastName}
-          </Typography>
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: { xs: "16px", md: "20px" },
+                  fontWeight: "bold",
+                  color: "primary.main",
+                }}
+              >
+                name :
+              </Typography>{" "}
+              {user?.firstName + " " + user?.lastName}
+            </Typography>
 
-          <Typography
-            sx={{ marginTop: 1, fontSize: { xs: "16px", md: "20px" } }}
-          >
             <Typography
-              component="span"
               sx={{
                 fontSize: { xs: "16px", md: "20px" },
-                fontWeight: "bold",
-                color: "primary.main",
               }}
             >
-              email :
-            </Typography>{" "}
-            {user?.email}
-          </Typography>
-        </Box>
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: { xs: "16px", md: "20px" },
+                  fontWeight: "bold",
+                  color: "primary.main",
+                }}
+              >
+                email :
+              </Typography>{" "}
+              {user?.email}
+            </Typography>
+          </Box>
 
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            alignItems: { md: "center" },
-            justifyContent: { md: "center" },
-          }}
-        >
-          <Stack
+          {/* Since & Role */}
+          <Box
             sx={{
-              marginTop: 1,
-              fontSize: { xs: "16px", md: "20px" },
-              mr: { md: "20px" },
-              flexDirection: "row",
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "flex-start", sm: "center" },
+              justifyContent: { xs: "flex-start", sm: "center" },
+              width: "100%",
+              gap: { xs: 1, md: 2 },
+              mt: 2,
+            }}
+          >
+            <Stack
+              sx={{
+                flexDirection: "row",
+                gap: 1,
+                alignItems: "center",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: { xs: "16px", md: "20px" },
+                  fontWeight: "bold",
+                  color: "primary.main",
+                }}
+              >
+                Since
+              </Typography>
+
+              <Typography
+                sx={{
+                  fontSize: { xs: "16px", md: "20px" },
+                  fontWeight: "bold",
+                  color: "secondary.main",
+                }}
+              >
+                : {user?.createdAt.substring(0, 10)}
+              </Typography>
+            </Stack>
+
+            {user?.role !== "user" && (
+              <Typography
+                sx={{
+                  fontSize: { xs: "16px", md: "20px" },
+                }}
+              >
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: { xs: "16px", md: "20px" },
+                    fontWeight: "bold",
+                    color: "primary.main",
+                  }}
+                >
+                  role :
+                </Typography>{" "}
+                {user?.role}
+              </Typography>
+            )}
+          </Box>
+        </Stack>
+
+        {userInfo._id === user?._id && (
+          <Stack
+            direction={"row"}
+            sx={{
+              my: 3,
+              border: "1px solid  grey",
+              borderRadius: 2,
+              padding: 1,
               gap: 2,
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            <Typography
-              // component="span"
-              sx={{
-                fontSize: { xs: "16px", md: "20px" },
-                fontWeight: "bold",
-                color: "primary.main",
-              }}
+            <Tooltip
+              title="delete profile"
+              placement="left"
+              key={"delete-profile"}
             >
-              registerd-at
-            </Typography>
+              <IconButton onClick={onDeleteCurrentUser}>
+                {" "}
+                <Delete color="error" sx={{ fontSize: "25" }} />{" "}
+              </IconButton>
+            </Tooltip>
 
-            <Typography
-              sx={{
-                fontSize: { xs: "16px", md: "20px", display: "block" },
-                alignContent: "flex-start",
-                fontWeight: "bold",
-                color: "secondary.main",
-              }}
+            <Tooltip
+              title="edit profile"
+              placement="right"
+              key={"edit-profile"}
             >
-              : {user?.createdAt.substring(0, 10)}
-            </Typography>
+              <IconButton
+                onClick={() => router.push(`/edit-user/${user?._id}`)}
+              >
+                {" "}
+                <Edit color="primary" sx={{ fontSize: "25" }} />{" "}
+              </IconButton>
+            </Tooltip>
           </Stack>
+        )}
 
-          <Typography
-            sx={{ marginTop: 1, fontSize: { xs: "16px", md: "20px" } }}
-          >
+        {user.role === "instructor" && (
+          <>
             <Typography
-              component="span"
-              sx={{
-                fontSize: { xs: "16px", md: "20px" },
-                fontWeight: "bold",
-                color: "primary.main",
-              }}
+              variant="h6"
+              sx={{ color: "primary.main", fontWeight: "bold" }}
             >
-              role :
-            </Typography>{" "}
-            {user?.role}
-          </Typography>
-        </Box>
-
-        <Stack sx={{ mt: 5, alignItems: "center", width: "100%" }}>
-          {user?._id && (
-            <EditUserProfileButton userId={resolvedParams.userId} />
-          )}
-        </Stack>
-
-        <Stack sx={{ mt: 1, alignItems: "center", width: "100%" }}>
-          {user?._id && (
-            <DeleteUserProfileButton
-              userId={user?._id}
-              onDeleteCurrentUser={onDeleteCurrentUser}
-            />
-          )}
-        </Stack>
-
-        <Typography
-          variant="h6"
-          sx={{ color: "primary.main", fontWeight: "bold" }}
-        >
-          {courseResponse?.courses && courseResponse?.courses?.length < 1
-            ? "No courses for this user"
-            : `${user?.firstName} courses : `}
-        </Typography>
-        <Stack sx={{ width: "100%" }}>
-          {courseResponse && (
-            <CoursesComponent
-              pagination={courseResponse?.pagination}
-              courses={filterdCourses as ICourse[]}
-              refetchPosts={refetch}
-              setCurrentPage={setCurrentPage}
-              page={currentPage}
-              userId={resolvedParams.userId}
-              deleteCourse={(args) => {
-                const { _id, page, userId } = args;
-                if (typeof userId !== "string") return;
-                deleteCourseProfilePage({ _id, page, userId });
-              }}
-            />
-          )}
-        </Stack>
+              {courseResponse?.courses && courseResponse?.courses?.length < 1
+                ? "No courses for this instructor"
+                : `${user?.firstName} courses : `}
+            </Typography>
+            <Stack sx={{ width: "100%" }}>
+              {courseResponse && (
+                <CoursesComponent
+                  pagination={courseResponse?.pagination}
+                  courses={filterdCourses as ICourse[]}
+                  refetchPosts={refetch}
+                  setCurrentPage={setCurrentPage}
+                  page={currentPage}
+                  userId={resolvedParams.userId}
+                  deleteCourse={(args) => {
+                    const { _id, page, userId } = args;
+                    if (typeof userId !== "string") return;
+                    deleteCourseAdminInstructorPage({ _id, page });
+                  }}
+                  loadingCourse={loadingCourse}
+                />
+              )}
+            </Stack>
+          </>
+        )}
       </Stack>
     </Container>
   );
