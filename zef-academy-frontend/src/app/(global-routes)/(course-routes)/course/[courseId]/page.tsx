@@ -1,15 +1,37 @@
+// import axiosRequest from "@/utils/request";
+// import { ICourse } from "@/types/course";
+// import CourseContent from "./_components/CourseContent";
+
+
+
+// const CoursePage = async ({
+//   params,
+// }: {
+//   params: { courseId: string };
+// }) => {
+//   if (!(await params).courseId) return;
+//   const { data: course } = await axiosRequest.get<ICourse>(
+//     `/api/v1/course/${(await params).courseId}`
+//   );
+
+//   console.log(course);
+
+//   return <CourseContent course={course} />;
+// };
+
+// export default CoursePage;
+
+
+
 import axiosRequest from "@/utils/request";
 import { ICourse } from "@/types/course";
 import CourseContent from "./_components/CourseContent";
 
-const CoursePage = async ({
-  params,
-}: {
-  params: { courseId: string };
-}) => {
-  if (!(await params).courseId) return;
+const CoursePage = async ({ params }: { params: { courseId: string } }) => {
+  if (!params.courseId) return null;
+
   const { data: course } = await axiosRequest.get<ICourse>(
-    `/api/v1/course/${(await params).courseId}`
+    `/api/v1/course/${params.courseId}`
   );
 
   console.log(course);
