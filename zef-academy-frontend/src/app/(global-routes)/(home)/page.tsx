@@ -18,7 +18,6 @@ import { useGetCategoriesQuery } from "@/redux/slices/api/categoryApiSlice";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { createSearchKeywordAction } from "@/redux/slices/searchSlice";
-import PostsComponent from "./_componens/CoursesComponent";
 import Grid from "@mui/material/Grid";
 import SearchParamComponent from "./_componens/SearchParamComponent";
 import {
@@ -29,7 +28,7 @@ import CoursesComponent from "./_componens/CoursesComponent";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
-  paddingLeft : 0,
+  paddingLeft: 0,
   borderRadius: theme.shape.borderRadius,
   backgroundColor: alpha(theme.palette.common.white, 0.15),
   "&:hover": {
@@ -85,7 +84,11 @@ export default function Home() {
   const [deleteCourseHomePage] = useDeleteCourseHomePageMutation();
   const { userInfo } = useAppSelector((state) => state.auth);
 
-  const { data: coursesResponse, refetch , isLoading} = useGetCoursesQuery(
+  const {
+    data: coursesResponse,
+    refetch,
+    isLoading,
+  } = useGetCoursesQuery(
     `?search=${searchKeyWord || ""}&page=${currentPage}&category=${category}`
   );
 
@@ -99,7 +102,7 @@ export default function Home() {
   return (
     <Container>
       <Stack sx={{ px: { xs: 2, sm: 4, md: 6 }, py: 2 }}>
-                <SearchParamComponent returnPath="/admin-dashboard/categories" />
+        <SearchParamComponent returnPath="/admin-dashboard/categories" />
         <Box
           sx={{
             width: "100%",
@@ -191,7 +194,7 @@ export default function Home() {
           </Grid>
         </Grid>
 
-        {( userInfo.role === "instructor") && (
+        {userInfo.role === "instructor" && (
           <Box
             sx={{
               py: 2,

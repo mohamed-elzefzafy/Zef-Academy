@@ -84,9 +84,12 @@ export class InstructorRequestController {
   }
 
     @Get('currentUser-instructor-request')
-  @Roles([UserRoles.USER])
+  @Roles([UserRoles.USER , UserRoles.ADMIN , UserRoles.INSTRUCTOR])
   @UseGuards(AuthGuard)
   findCurrentUserInstructorRequest(@CurrentUser() user: JwtPayloadType) {
+    if (user.role === "admin" || user.role === "instructor") {
+      return {}
+    }
     return this.instructorRequestService.findCurrentUserInstructorRequest(user);
   }
 
