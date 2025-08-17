@@ -5,18 +5,21 @@ import checkout from "./actions/checkout";
 import getStripe from "./stripe";
 
 interface CheckoutProps {
-    courseId : string;
+  courseId: string;
 }
-const Checkout = ({courseId} : CheckoutProps) => {
-
-const handleCheckout = async() => {
-const session = await checkout(courseId);
-const stripe = await getStripe();
-await stripe?.redirectToCheckout({ sessionId: session.id });
-}
+const Checkout = ({ courseId }: CheckoutProps) => {
+  const handleCheckout = async () => {
+    const session = await checkout(courseId);
+    const stripe = await getStripe();
+    await stripe?.redirectToCheckout({ sessionId: session.id });
+  };
 
   return (
-    <Button variant="text" sx={{ maxWidth: "25%", textTransform : "capitalize" }} onClick={handleCheckout}>
+    <Button
+      variant="text"
+      sx={{ maxWidth: "25%", textTransform: "capitalize" }}
+      onClick={handleCheckout}
+    >
       Buy Now
     </Button>
   );

@@ -1,5 +1,5 @@
 "use server";
-import { protectedRequest } from "@/app/common/utils/request";
+import { protectedRequest } from "@/common/utils/request";
 import { AxiosError } from "axios";
 
 export default async function checkout(courseId: string) {

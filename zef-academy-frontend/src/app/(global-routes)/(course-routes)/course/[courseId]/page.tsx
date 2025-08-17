@@ -30,3 +30,28 @@ export default CoursePage;
 
 
 
+// "use client";
+
+// import CourseContent from "./_components/CourseContent";
+// import { useGetOneCourseQuery } from "@/redux/slices/api/courseApiSlice";
+// import Loading from "@/app/loading";
+
+// type CoursePageProps = {
+//   params: { courseId: string };
+// };
+
+// const CoursePage = ({ params }: CoursePageProps) => {
+//   const { data: course, isLoading } = useGetOneCourseQuery(params.courseId);
+
+//   if (isLoading) {
+//     return <Loading />;
+//   }
+
+//   if (!course) {
+//     return <div>Course not found</div>;
+//   }
+
+//   return <CourseContent course={course} />;
+// };
+
+// export default CoursePage;
