@@ -279,7 +279,7 @@ const ProfilePage = ({ params }: { params: Promise<{ userId: string }> }) => {
                 <CoursesComponent
                   pagination={courseResponse?.pagination}
                   courses={filterdCourses as ICourse[]}
-                  refetchPosts={refetch}
+                  refetchCourses={refetch}
                   setCurrentPage={setCurrentPage}
                   page={currentPage}
                   userId={resolvedParams.userId}

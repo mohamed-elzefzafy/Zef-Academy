@@ -1,80 +1,32 @@
-// import axiosRequest from "@/utils/request";
-// import { ICourse } from "@/types/course";
-// import CourseContent from "./_components/CourseContent";
-
-
-
-// const CoursePage = async ({
-//   params,
-// }: {
-//   params: { courseId: string };
-// }) => {
-//   if (!(await params).courseId) return;
-//   const { data: course } = await axiosRequest.get<ICourse>(
-//     `/api/v1/course/${(await params).courseId}`
-//   );
-
-//   console.log(course);
-
-//   return <CourseContent course={course} />;
-// };
-
-// export default CoursePage;
-
-
-
-// import axiosRequest from "@/utils/request";
-// import { ICourse } from "@/types/course";
-// import CourseContent from "./_components/CourseContent";
-
-// const CoursePage = async ({ params }: { params: { courseId: string } }) => {
-//   if (!params.courseId) return null;
-
-//   const { data: course } = await axiosRequest.get<ICourse>(
-//     `/api/v1/course/${params.courseId}`
-//   );
-
-//   console.log(course);
-
-//   return <CourseContent course={course} />;
-// };
-
-// export default CoursePage;
-
-
-// import axiosRequest from "@/utils/request";
-// import { ICourse } from "@/types/course";
-// import CourseContent from "./_components/CourseContent";
-// import { PageProps } from "next"; // ✨ خد التايب الجاهز من Next.js
-
-// const CoursePage = async ({ params }: PageProps<{ courseId: string }>) => {
-//   if (!params?.courseId) return null;
-
-//   const { data: course } = await axiosRequest.get<ICourse>(
-//     `/api/v1/course/${params.courseId}`
-//   );
-
-//   return <CourseContent course={course} />;
-// };
-
-// export default CoursePage;
-
-
-
-import { ICourse } from "@/types/course";
-import axiosRequest from "@/utils/request";
+"use client";
 import CourseContent from "./_components/CourseContent";
+import { use } from "react";
+import { useGetOneCourseQuery } from "@/redux/slices/api/courseApiSlice";
+import Loading from "@/app/loading";
 
-interface PageProps {
-  params: { courseId: string };
-}
 
-const CoursePage = async ({ params }: PageProps) => {
-  const { data: course } = await axiosRequest.get<ICourse>(
-    `/api/v1/course/${params.courseId}`
-  );
+const CoursePage =  ({
+  params,
+}: {
+  params: Promise<{ courseId: string }>;
+}) => {
+  const resolvedParams = use(params);
+
+
+  const {data : course , isLoading} = useGetOneCourseQuery(resolvedParams.courseId);
+
+ if (isLoading) {
+  return <Loading/>
+ }
+
+  if (!course) {
+  return 
+ }
 
   return <CourseContent course={course} />;
 };
 
 export default CoursePage;
+
+
+
