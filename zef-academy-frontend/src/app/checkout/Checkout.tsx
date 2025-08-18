@@ -11,7 +11,7 @@ interface CheckoutProps {
 const Checkout = ({ courseId }: CheckoutProps) => {
   const [checkoutStripe] = useCheckoutStripeMutation();
   const handleCheckout = async () => {
-    const session = await checkoutStripe({courseId}).unwrap();
+    const session = await checkoutStripe({ courseId }).unwrap();
     const stripe = await getStripe();
     await stripe?.redirectToCheckout({ sessionId: session.id });
   };

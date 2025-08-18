@@ -10,17 +10,6 @@ import { UserRoles } from 'src/shared/enums/roles.enum';
 @Controller('v1/checkout')
 export class StripeController {
   constructor(private readonly stripeService: StripeService) {}
-// @Post("session")
-// @Roles([UserRoles.INSTRUCTOR , UserRoles.USER])
-// @UseGuards(AuthGuard)
-// async createSession(
-//   @Body() createSessionRequestDto: CreateSessionRequestDto,
-//   @CurrentUser() user: JwtPayloadType
-// ) {
-//   return this.stripeService.createSession(createSessionRequestDto.courseId, user.id);
-// }
-
-
 @Post("session")
 @Roles([UserRoles.INSTRUCTOR , UserRoles.USER])
 @UseGuards(AuthGuard)
@@ -28,11 +17,7 @@ async createSession(
   @Body() createSessionRequestDto: CreateSessionRequestDto,
   @CurrentUser() user: JwtPayloadType
 ) {
-  const session = await this.stripeService.createSession(
-    createSessionRequestDto.courseId, 
-    user.id
-  );
-  return { id: session.id };  // ✅ رجّع بس الـ id
+  return this.stripeService.createSession(createSessionRequestDto.courseId, user.id);
 }
 
   @Post('webhook')
