@@ -294,6 +294,9 @@ const InstructorCoursesPage = () => {
             setPageSize(model.pageSize);
           }}
           loading={isLoading}
+              localeText={{
+            noRowsLabel: "📭 No data to display",
+          }}
           sx={{
             fontSize: isSmallScreen ? "12px" : "14px",
             "& .MuiDataGrid-cell": {

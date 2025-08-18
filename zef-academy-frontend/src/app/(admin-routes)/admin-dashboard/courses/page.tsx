@@ -8,7 +8,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { Delete, Edit } from "@mui/icons-material";
+import { Delete } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import toast from "react-hot-toast";
 import swal from "sweetalert";
@@ -157,14 +157,6 @@ const InstructorCoursesPage = () => {
       ),
     },
 
-    // {
-    //   field: "createdAt",
-    //   headerName: "Created At",
-    //   flex: isSmallScreen ? 0.6 : 0.8,
-    //   minWidth: isSmallScreen ? 80 : 100,
-    //   align: "center",
-    //   headerAlign: "center",
-    // },
     {
       field: "isFree",
       headerName: "Free",
@@ -366,6 +358,9 @@ const InstructorCoursesPage = () => {
             setPageSize(model.pageSize);
           }}
           loading={isLoading}
+              localeText={{
+            noRowsLabel: "📭 No data to display",
+          }}
           sx={{
             fontSize: isSmallScreen ? "12px" : "14px",
             "& .MuiDataGrid-cell": {

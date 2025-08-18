@@ -11,7 +11,6 @@ import { useRemoveLectureMutation, useUpdateLecturePositionMutation } from "@/re
 import { Delete } from "@mui/icons-material";
 import { IUserInfo } from "@/types/auth";
 import { ICourse } from "@/types/course";
-import { useRouter } from "next/navigation";
 
 interface ILecturesTabProps {
   lectureResponse: ILectureResponse | undefined;
@@ -215,7 +214,7 @@ const LecturesTab = ({
                                 fontWeight: 600,
                               }}
                             >
-                              {lecture.position} - Lecture : {lecture.title}{" "}
+                              {lecture.position}  : {lecture.title}{" "}
                                   {userInfo._id === course.instructor._id && (    <Tooltip
                                 title={"remove lecture"}
                                 placement="right-end"

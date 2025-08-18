@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_URL, API_URL_FOR_STRIPE } from "../constants/api";
+import { API_URL } from "../constants/api";
 import { cookies } from "next/headers";
 
 // 1️⃣ Public Axios instance for unprotected routes (e.g., login, register, etc.)
@@ -12,7 +12,7 @@ const request = axios.create({
 const protectedRequest = axios.create({
   // baseURL: API_URL,
   //TODO:MAKE ONE BASE URL FOR ALL REQUESTS BEFORE DEPLOYMENT
-  baseURL: API_URL_FOR_STRIPE,
+  baseURL: API_URL,
   withCredentials: true, // Cookies are important here
 });
 
