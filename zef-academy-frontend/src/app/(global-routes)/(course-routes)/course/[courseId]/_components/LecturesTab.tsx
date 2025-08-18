@@ -214,7 +214,7 @@ const LecturesTab = ({
                                 fontWeight: 600,
                               }}
                             >
-                              {lecture.position} - Lecture : {lecture.title}{" "}
+                              {lecture.position} -  {lecture.title}{" "}
                                   {userInfo._id === course.instructor._id && (    <Tooltip
                                 title={"remove lecture"}
                                 placement="right-end"
