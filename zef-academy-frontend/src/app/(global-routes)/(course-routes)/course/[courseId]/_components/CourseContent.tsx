@@ -265,7 +265,12 @@ const CourseContent = ({ course }: { course: ICourse }) => {
 
 
 
-  cd
+        {canSeeBuyButton && (
+          <Box sx={{ width: "100%", my: 2 }}>
+            if you want to buy the ({course.title}) course
+            <Checkout courseId={course._id} />
+          </Box>
+        )}
 
         {course.instructor._id === userInfo._id && (
           <Box
