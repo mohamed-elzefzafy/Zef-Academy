@@ -105,7 +105,7 @@ export class InstructorRequestService {
       user: user.id,
     });
     if (!instructorRequest) {
-    return {};
+   throw new NotFoundException(`no requset with this user`);
     }
     return instructorRequest;
   }
