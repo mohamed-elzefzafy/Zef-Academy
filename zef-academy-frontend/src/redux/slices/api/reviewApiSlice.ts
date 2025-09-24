@@ -22,14 +22,13 @@ export const reviewsApiSlice = apiSlice.injectEndpoints({
       providesTags: ["Review"],
     }),
 
-        getAdminReviews: builder.query<IReviewResponse, string>({
+    getAdminReviews: builder.query<IReviewResponse, string>({
       query: () => ({
         url: `/api/v1/reviews/admin-find-all-reviews`,
       }),
       keepUnusedDataFor: 5,
       providesTags: ["Review"],
     }),
-
 
     getAllReviewsAdmin: builder.query<IReview[], void>({
       query: () => ({
